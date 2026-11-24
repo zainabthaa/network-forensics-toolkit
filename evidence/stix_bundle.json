@@ -1,0 +1,184 @@
+{
+  "type": "bundle",
+  "id": "bundle--cb004ac7-9385-4485-ae3d-7dc713d52ebc",
+  "objects": [
+    {
+      "type": "identity",
+      "spec_version": "2.1",
+      "id": "identity--078adf94-6b3e-4191-abe7-d65a3ea19271",
+      "created": "2026-11-24T17:29:00.000Z",
+      "modified": "2026-11-24T17:29:00.000Z",
+      "name": "pcap-triage",
+      "identity_class": "tool"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--46875f5b-e280-41ce-927c-7dcaf21323a1",
+      "created": "2026-11-24T17:29:00.000Z",
+      "modified": "2026-11-24T17:29:00.000Z",
+      "name": "client host 192.168.128.5",
+      "indicator_types": [
+        "anomalous-activity"
+      ],
+      "pattern": "[ipv4-addr:value = '192.168.128.5']",
+      "pattern_type": "stix",
+      "valid_from": "2026-11-24T17:29:00.000Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--fb574899-4208-493b-9c92-f26bfcf03c65",
+      "created": "2026-11-24T17:29:00.000Z",
+      "modified": "2026-11-24T17:29:00.000Z",
+      "name": "server host 192.168.128.20",
+      "indicator_types": [
+        "anomalous-activity"
+      ],
+      "pattern": "[ipv4-addr:value = '192.168.128.20']",
+      "pattern_type": "stix",
+      "valid_from": "2026-11-24T17:29:00.000Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--e898d1ba-a37b-4116-ad3b-75119a435d03",
+      "created": "2026-11-24T17:29:00.000Z",
+      "modified": "2026-11-24T17:29:00.000Z",
+      "name": "HTTP GET /login.php",
+      "indicator_types": [
+        "anomalous-activity"
+      ],
+      "pattern": "[url:value = 'http://192.168.128.20/login.php']",
+      "pattern_type": "stix",
+      "valid_from": "2026-11-24T17:29:00.000Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--e432e5da-65b8-44ed-9f7a-2394b8da83b4",
+      "created": "2026-11-24T17:29:00.000Z",
+      "modified": "2026-11-24T17:29:00.000Z",
+      "name": "HTTP POST /login.php",
+      "indicator_types": [
+        "anomalous-activity"
+      ],
+      "pattern": "[url:value = 'http://192.168.128.20/login.php']",
+      "pattern_type": "stix",
+      "valid_from": "2026-11-24T17:29:00.000Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--d47a1401-7db8-4e8f-9338-57e0f8b838e7",
+      "created": "2026-11-24T17:29:00.000Z",
+      "modified": "2026-11-24T17:29:00.000Z",
+      "name": "HTTP GET /",
+      "indicator_types": [
+        "anomalous-activity"
+      ],
+      "pattern": "[url:value = 'http://192.168.128.20/']",
+      "pattern_type": "stix",
+      "valid_from": "2026-11-24T17:29:00.000Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--803aa623-bb48-4179-b0ea-4dd969a38027",
+      "created": "2026-11-24T17:29:00.000Z",
+      "modified": "2026-11-24T17:29:00.000Z",
+      "name": "HTTP GET /index.php",
+      "indicator_types": [
+        "anomalous-activity"
+      ],
+      "pattern": "[url:value = 'http://192.168.128.20/index.php']",
+      "pattern_type": "stix",
+      "valid_from": "2026-11-24T17:29:00.000Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--e43e5d21-4b43-4ce5-afa6-217e80672be6",
+      "created": "2026-11-24T17:29:00.000Z",
+      "modified": "2026-11-24T17:29:00.000Z",
+      "name": "HTTP GET /security.php",
+      "indicator_types": [
+        "anomalous-activity"
+      ],
+      "pattern": "[url:value = 'http://192.168.128.20/security.php']",
+      "pattern_type": "stix",
+      "valid_from": "2026-11-24T17:29:00.000Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--4cf7c605-c83a-4313-bda7-9caabb4ed48a",
+      "created": "2026-11-24T17:29:00.000Z",
+      "modified": "2026-11-24T17:29:00.000Z",
+      "name": "HTTP GET /vulnerabilities/xss_r/",
+      "indicator_types": [
+        "anomalous-activity"
+      ],
+      "pattern": "[url:value = 'http://192.168.128.20/vulnerabilities/xss_r/']",
+      "pattern_type": "stix",
+      "valid_from": "2026-11-24T17:29:00.000Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--3eb4ab05-c94e-46e0-9688-f10ead4d7383",
+      "created": "2026-11-24T17:29:00.000Z",
+      "modified": "2026-11-24T17:29:00.000Z",
+      "name": "HTTP GET /vulnerabilities/xss_s/",
+      "indicator_types": [
+        "anomalous-activity"
+      ],
+      "pattern": "[url:value = 'http://192.168.128.20/vulnerabilities/xss_s/']",
+      "pattern_type": "stix",
+      "valid_from": "2026-11-24T17:29:00.000Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--bd33eda6-be12-43db-8dfc-fd5c9a0c6105",
+      "created": "2026-11-24T17:29:00.000Z",
+      "modified": "2026-11-24T17:29:00.000Z",
+      "name": "HTTP GET /about.php",
+      "indicator_types": [
+        "anomalous-activity"
+      ],
+      "pattern": "[url:value = 'http://192.168.128.20/about.php']",
+      "pattern_type": "stix",
+      "valid_from": "2026-11-24T17:29:00.000Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--21fa63f2-1aff-4e68-a585-9ccf693acc65",
+      "created": "2026-11-24T17:29:00.000Z",
+      "modified": "2026-11-24T17:29:00.000Z",
+      "name": "Observed client User-Agent",
+      "indicator_types": [
+        "anomalous-activity"
+      ],
+      "pattern": "[network-traffic:extensions.'http-request-ext'.request_header.'User-Agent' = 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0']",
+      "pattern_type": "stix",
+      "valid_from": "2026-11-24T17:29:00.000Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--d4178b97-50cc-49fc-ae1a-8d1da6f29d6e",
+      "created": "2026-11-24T17:29:00.000Z",
+      "modified": "2026-11-24T17:29:00.000Z",
+      "name": "Cleartext credentials transmitted over HTTP",
+      "indicator_types": [
+        "anomalous-activity",
+        "compromised"
+      ],
+      "pattern": "[network-traffic:protocols[*] = 'http']",
+      "pattern_type": "stix",
+      "valid_from": "2026-11-24T17:29:00.000Z"
+    }
+  ]
+}

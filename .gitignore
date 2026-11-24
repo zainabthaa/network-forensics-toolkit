@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.venv/
+.DS_Store
+
+# tool run outputs (canonical copies live in evidence/)
+/report.html
+/report.json
+/sigma_rules.yml
+/stix_bundle.json
+/demo.html

@@ -1,0 +1,70 @@
+title: Cleartext Credentials Submitted Over HTTP
+id: b0576e7a-6cf4-5e0b-bb02-b30349c2e668
+status: experimental
+description: Detects username/password fields or HTTP Basic auth sent over unencrypted HTTP.
+author: pcap-triage
+date: 2026-11-24
+logsource:
+    category: proxy
+detection:
+    selection:
+        c-protocol: 'http'
+        cs-method: 'POST'
+        cs-uri-query|contains:
+            - 'password='
+            - 'passwd='
+            - 'pwd='
+    condition: selection
+falsepositives:
+    - Legitimate internal applications that have not yet migrated to HTTPS
+level: high
+tags:
+    - attack.credential_access
+    - attack.t1040
+    - attack.t1557
+
+---
+title: Session Cookie Set Without Secure Attribute
+id: 2e7ec1f3-9823-5cc5-8c12-1ceffb139017
+status: experimental
+description: Detects Set-Cookie responses for session identifiers that omit the Secure attribute, allowing transmission over HTTP.
+author: pcap-triage
+date: 2026-11-24
+logsource:
+    category: proxy
+detection:
+    selection:
+        sc-set-cookie|contains:
+            - 'PHPSESSID='
+            - 'JSESSIONID='
+            - 'SESSIONID='
+    filter:
+        sc-set-cookie|contains: 'Secure'
+    condition: selection and not filter
+falsepositives:
+    - Legitimate internal applications that have not yet migrated to HTTPS
+level: medium
+tags:
+    - attack.credential_access
+    - attack.t1550.004
+
+---
+title: Web Authentication Over Unencrypted Channel
+id: 127d7987-9656-5095-92e7-4c1b5fffd39a
+status: experimental
+description: Detects authenticated web sessions (session cookie present) carried entirely over HTTP with no TLS.
+author: pcap-triage
+date: 2026-11-24
+logsource:
+    category: proxy
+detection:
+    selection:
+        c-protocol: 'http'
+        cs-cookie|contains: 'SESSID'
+    condition: selection
+falsepositives:
+    - Legitimate internal applications that have not yet migrated to HTTPS
+level: high
+tags:
+    - attack.credential_access
+    - attack.t1040

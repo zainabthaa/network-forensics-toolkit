@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PCAP Triage Report — {{ meta.pcap_file }}</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#171e2e; --line:#28324a; --ink:#e7ecf5; --muted:#9aa6bd;
+    --accent:#4f8cff; --crit:#ff5470; --high:#ff9f43; --med:#ffd166; --low:#2dd4a7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:32px 28px 56px}
+  header{display:flex;justify-content:space-between;align-items:center;
+         border-bottom:2px solid var(--accent);padding-bottom:18px;margin-bottom:8px}
+  h1{font-size:24px;margin:0;letter-spacing:.2px}
+  h1 small{display:block;color:var(--muted);font-size:13px;font-weight:400;margin-top:4px}
+  h2{font-size:17px;margin:34px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .badge{padding:6px 14px;border-radius:999px;font-weight:700;font-size:13px;letter-spacing:.4px}
+  .CRITICAL{background:rgba(255,84,112,.15);color:var(--crit);border:1px solid var(--crit)}
+  .HIGH{background:rgba(255,159,67,.15);color:var(--high);border:1px solid var(--high)}
+  .MEDIUM{background:rgba(255,209,102,.15);color:var(--med);border:1px solid var(--med)}
+  .LOW{background:rgba(45,212,167,.15);color:var(--low);border:1px solid var(--low)}
+  .meta{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 28px;
+        background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-top:16px}
+  .meta div{font-size:13.5px}
+  .meta b{color:var(--muted);font-weight:600;display:inline-block;min-width:140px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;word-break:break-all}
+  table{width:100%;border-collapse:collapse;margin-top:8px;background:var(--panel);
+        border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:top}
+  th{background:#1d2740;color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11.5px;letter-spacing:.5px}
+  tr:last-child td{border-bottom:none}
+  .finding{display:flex;gap:12px;align-items:flex-start;background:var(--panel);
+           border:1px solid var(--line);border-left-width:4px;border-radius:8px;padding:12px 16px;margin:10px 0}
+  .finding.CRITICAL{border-left-color:var(--crit)}
+  .finding.HIGH{border-left-color:var(--high)}
+  .finding.MEDIUM{border-left-color:var(--med)}
+  .finding .t{font-weight:700;margin-bottom:2px}
+  .finding .d{color:var(--muted);font-size:13px}
+  .pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px}
+  .bar{height:22px;border-radius:6px;background:#223;overflow:hidden;border:1px solid var(--line)}
+  .bar>span{display:block;height:100%;background:linear-gradient(90deg,var(--crit),var(--high));
+            text-align:right;color:#fff;font-size:12px;line-height:22px;padding-right:8px;font-weight:700}
+  .tag{display:inline-block;background:#223;border:1px solid var(--line);border-radius:5px;
+       padding:1px 7px;margin:1px 3px 1px 0;font-size:11.5px;color:var(--muted)}
+  .bad{color:var(--crit);font-weight:600}
+  .ok{color:var(--low);font-weight:600}
+  footer{margin-top:40px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>PCAP Triage Report<small>{{ meta.pcap_file }} &middot; generated {{ meta.generated_utc }}</small></h1>
+    <span class="badge {{ risk_level }}">RISK: {{ risk_level }}</span>
+  </header>
+
+  <div class="meta">
+    <div><b>Packets</b> {{ meta.packet_count }}</div>
+    <div><b>HTTP transactions</b> {{ meta.http_transactions }}</div>
+    <div><b>Capture start</b> {{ meta.capture_start_utc }}</div>
+    <div><b>Capture end</b> {{ meta.capture_end_utc }}</div>
+    <div style="grid-column:1/3"><b>SHA-256</b> <span class="mono">{{ meta.sha256 }}</span></div>
+  </div>
+
+  <h2>Key Findings</h2>
+  {% if findings %}
+    {% for f in findings %}
+    <div class="finding {{ f.severity }}">
+      <span class="pill {{ f.severity }}">{{ f.severity }}</span>
+      <div><div class="t">{{ f.title }}</div><div class="d">{{ f.detail }}</div></div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="ok">No high-risk issues detected.</p>
+  {% endif %}
+
+  <h2>Recovered Credentials</h2>
+  {% if credentials %}
+  <table>
+    <tr><th>Host</th><th>Endpoint</th><th>Username</th><th>Password</th><th>Fields</th></tr>
+    {% for c in credentials %}
+    <tr>
+      <td class="mono">{{ c.host }}</td>
+      <td class="mono">{{ c.uri }}</td>
+      <td class="bad">{{ c.username if c.username is not none else '—' }}</td>
+      <td class="bad">{{ c.password if c.password is not none else '—' }}</td>
+      <td>{% for fld in c.all_fields %}<span class="tag">{{ fld }}</span>{% endfor %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="ok">None found.</p>{% endif %}
+
+  <h2>Session Cookies</h2>
+  {% if session_cookies %}
+  <table>
+    <tr><th>Name</th><th>Secure</th><th>HttpOnly</th><th>SameSite</th><th>Reuse</th><th>Issues</th></tr>
+    {% for c in session_cookies %}
+    <tr>
+      <td class="mono">{{ c.name }}</td>
+      <td class="{{ 'ok' if c.secure else 'bad' }}">{{ 'yes' if c.secure else 'NO' }}</td>
+      <td class="{{ 'ok' if c.httponly else 'bad' }}">{{ 'yes' if c.httponly else 'NO' }}</td>
+      <td class="{{ 'ok' if c.samesite else 'bad' }}">{{ c.samesite or 'NONE' }}</td>
+      <td>{{ c.reuse_count }}&times;</td>
+      <td class="d">{% for i in c.issues %}&bull; {{ i }}<br>{% endfor %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="ok">No session cookies observed.</p>{% endif %}
+
+  <h2>Authentication Artifacts</h2>
+  {% if auth.basic_auth or auth.jwts or auth.api_keys %}
+    {% if auth.basic_auth %}
+    <table>
+      <tr><th>HTTP Basic Auth — Endpoint</th><th>Username</th><th>Password</th></tr>
+      {% for b in auth.basic_auth %}
+      <tr><td class="mono">{{ b.endpoint }}</td><td class="bad">{{ b.username }}</td><td class="bad">{{ b.password }}</td></tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    {% if auth.api_keys %}
+    <table>
+      <tr><th>API Key / Secret</th><th>Value</th><th>Where</th></tr>
+      {% for k in auth.api_keys %}
+      <tr><td class="mono">{{ k.name }}</td><td class="bad mono">{{ k.value }}</td><td>{{ k.where }}</td></tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    {% if auth.jwts %}
+    <table>
+      <tr><th>JWT (alg)</th><th>Claims (subset)</th></tr>
+      {% for j in auth.jwts %}
+      <tr><td class="mono">{{ (j.header or {}).get('alg','?') }}</td>
+          <td class="mono">{{ (j.payload or {})|list|join(', ') }}</td></tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+  {% else %}<p class="ok">No Basic-Auth, JWT, or API-key artifacts observed.</p>{% endif %}
+
+  <h2>TLS / Encrypted Sessions</h2>
+  {% if tls.tls_sessions %}
+  <table>
+    <tr><th>Server</th><th>Port</th><th>Version</th><th>SNI</th></tr>
+    {% for s in tls.tls_sessions %}
+    <tr><td class="mono">{{ s.server }}</td><td>{{ s.port }}</td><td>{{ s.version }}</td><td class="mono">{{ s.sni or '—' }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="bad">No TLS sessions observed — the capture contains no encrypted application traffic.</p>{% endif %}
+
+  <h2>Transport Encryption</h2>
+  <div class="bar"><span style="width:{{ encryption.cleartext_pct }}%">{{ encryption.cleartext_pct }}% cleartext</span></div>
+  <p class="d" style="color:var(--muted)">
+    Cleartext (HTTP): {{ '{:,}'.format(encryption.cleartext_bytes) }} bytes &middot;
+    Encrypted (TLS): {{ '{:,}'.format(encryption.encrypted_bytes) }} bytes &mdash;
+    <b>{{ encryption.verdict }}.</b>
+  </p>
+
+  <h2>HTTP Endpoints ({{ endpoints|length }})</h2>
+  <table>
+    <tr><th>Method</th><th>Path</th><th>Hits</th><th>Status</th><th>Form fields</th></tr>
+    {% for e in endpoints %}
+    <tr>
+      <td class="mono">{{ e.method }}</td>
+      <td class="mono">{{ e.path }}</td>
+      <td>{{ e.count }}</td>
+      <td>{{ e.status|join(', ') }}</td>
+      <td>{% for fld in e.form_fields %}<span class="tag">{{ fld }}</span>{% endfor %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <footer>Generated by pcap-triage &middot; offline forensic analysis &middot; evidence integrity via SHA-256</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,299 @@
+{
+  "meta": {
+    "pcap_file": "traffic_capture.pcapng",
+    "sha256": "dc4e142dda0461ea17ddcd7a17ad017293895a83f1efd95b732dddaa3b2ee351",
+    "generated_utc": "2026-11-24 17:29:00 UTC",
+    "packet_count": 298,
+    "http_transactions": 28
+  },
+  "risk_level": "CRITICAL",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "category": "Credential Exposure",
+      "title": "3 plaintext credential submission(s) recovered",
+      "detail": "Form credentials were transmitted unencrypted and are readable from the capture (OWASP A02)."
+    },
+    {
+      "severity": "HIGH",
+      "category": "No Transport Encryption",
+      "title": "All application traffic is cleartext (no TLS)",
+      "detail": "No HTTPS/TLS traffic was observed; every request, response, and header is exposed."
+    },
+    {
+      "severity": "HIGH",
+      "category": "Session Token Exposure",
+      "title": "Session cookie 'PHPSESSID' is exposed/replayable",
+      "detail": "Missing 'Secure' flag \u2014 cookie can be sent over plaintext HTTP; Missing 'HttpOnly' flag \u2014 cookie readable by JavaScript; No 'SameSite' attribute \u2014 cross-site request exposure; Session token replayed in cleartext across 28 requests (replayable/hijackable)"
+    }
+  ],
+  "credentials": [
+    {
+      "uri": "/login.php",
+      "host": "192.168.128.20",
+      "username": "admin",
+      "password": "password",
+      "all_fields": [
+        "username",
+        "password",
+        "Login",
+        "user_token"
+      ],
+      "stream_id": 1
+    },
+    {
+      "uri": "/login.php",
+      "host": "192.168.128.20",
+      "username": "admin",
+      "password": "wrongpass",
+      "all_fields": [
+        "username",
+        "password",
+        "Login",
+        "user_token"
+      ],
+      "stream_id": 15
+    },
+    {
+      "uri": "/login.php",
+      "host": "192.168.128.20",
+      "username": "admin",
+      "password": "password",
+      "all_fields": [
+        "username",
+        "password",
+        "Login",
+        "user_token"
+      ],
+      "stream_id": 16
+    }
+  ],
+  "auth": {
+    "basic_auth": [],
+    "jwts": [],
+    "api_keys": [],
+    "_user_agent": "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0"
+  },
+  "session_cookies": [
+    {
+      "name": "PHPSESSID",
+      "secure": false,
+      "httponly": false,
+      "samesite": null,
+      "sample_value": "fda8bd5413fc2245525bd8eeef541dec",
+      "issues": [
+        "Missing 'Secure' flag \u2014 cookie can be sent over plaintext HTTP",
+        "Missing 'HttpOnly' flag \u2014 cookie readable by JavaScript",
+        "No 'SameSite' attribute \u2014 cross-site request exposure",
+        "Session token replayed in cleartext across 28 requests (replayable/hijackable)"
+      ],
+      "reuse_count": 28
+    }
+  ],
+  "tls": {
+    "tls_sessions": [],
+    "encrypted_session_count": 0
+  },
+  "encryption": {
+    "cleartext_bytes": 332761,
+    "encrypted_bytes": 0,
+    "cleartext_pct": 100.0,
+    "verdict": "ALL traffic is unencrypted"
+  },
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/login.php",
+      "count": 3,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/login.php",
+      "count": 3,
+      "form_fields": [
+        "Login",
+        "password",
+        "user_token",
+        "username"
+      ],
+      "status": [
+        "302"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/",
+      "count": 2,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/index.php",
+      "count": 2,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/security.php",
+      "count": 2,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/vulnerabilities/xss_r/",
+      "count": 2,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/vulnerabilities/xss_s/",
+      "count": 2,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/about.php",
+      "count": 1,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/docs/graphics/docker/detail.png",
+      "count": 1,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/docs/graphics/docker/overview.png",
+      "count": 1,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/instructions.php",
+      "count": 1,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/logout.php",
+      "count": 1,
+      "form_fields": [],
+      "status": [
+        "302"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/phpinfo.php",
+      "count": 1,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/security.php",
+      "count": 1,
+      "form_fields": [
+        "seclev_submit",
+        "security",
+        "user_token"
+      ],
+      "status": [
+        "302"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/vulnerabilities/cryptography/",
+      "count": 1,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/vulnerabilities/exec/",
+      "count": 1,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/vulnerabilities/sqli/",
+      "count": 1,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/vulnerabilities/weak_id/",
+      "count": 1,
+      "form_fields": [],
+      "status": [
+        "200"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/vulnerabilities/xss_s/",
+      "count": 1,
+      "form_fields": [
+        "btnSign",
+        "mtxMessage",
+        "txtName"
+      ],
+      "status": [
+        "200"
+      ]
+    }
+  ],
+  "_hosts": [
+    [
+      "192.168.128.5",
+      "client"
+    ],
+    [
+      "192.168.128.20",
+      "server"
+    ]
+  ]
+}

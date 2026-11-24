@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PCAP Triage Report — traffic_capture.pcapng</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#171e2e; --line:#28324a; --ink:#e7ecf5; --muted:#9aa6bd;
+    --accent:#4f8cff; --crit:#ff5470; --high:#ff9f43; --med:#ffd166; --low:#2dd4a7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:32px 28px 56px}
+  header{display:flex;justify-content:space-between;align-items:center;
+         border-bottom:2px solid var(--accent);padding-bottom:18px;margin-bottom:8px}
+  h1{font-size:24px;margin:0;letter-spacing:.2px}
+  h1 small{display:block;color:var(--muted);font-size:13px;font-weight:400;margin-top:4px}
+  h2{font-size:17px;margin:34px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .badge{padding:6px 14px;border-radius:999px;font-weight:700;font-size:13px;letter-spacing:.4px}
+  .CRITICAL{background:rgba(255,84,112,.15);color:var(--crit);border:1px solid var(--crit)}
+  .HIGH{background:rgba(255,159,67,.15);color:var(--high);border:1px solid var(--high)}
+  .MEDIUM{background:rgba(255,209,102,.15);color:var(--med);border:1px solid var(--med)}
+  .LOW{background:rgba(45,212,167,.15);color:var(--low);border:1px solid var(--low)}
+  .meta{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 28px;
+        background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-top:16px}
+  .meta div{font-size:13.5px}
+  .meta b{color:var(--muted);font-weight:600;display:inline-block;min-width:140px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;word-break:break-all}
+  table{width:100%;border-collapse:collapse;margin-top:8px;background:var(--panel);
+        border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:top}
+  th{background:#1d2740;color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11.5px;letter-spacing:.5px}
+  tr:last-child td{border-bottom:none}
+  .finding{display:flex;gap:12px;align-items:flex-start;background:var(--panel);
+           border:1px solid var(--line);border-left-width:4px;border-radius:8px;padding:12px 16px;margin:10px 0}
+  .finding.CRITICAL{border-left-color:var(--crit)}
+  .finding.HIGH{border-left-color:var(--high)}
+  .finding.MEDIUM{border-left-color:var(--med)}
+  .finding .t{font-weight:700;margin-bottom:2px}
+  .finding .d{color:var(--muted);font-size:13px}
+  .pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px}
+  .bar{height:22px;border-radius:6px;background:#223;overflow:hidden;border:1px solid var(--line)}
+  .bar>span{display:block;height:100%;background:linear-gradient(90deg,var(--crit),var(--high));
+            text-align:right;color:#fff;font-size:12px;line-height:22px;padding-right:8px;font-weight:700}
+  .tag{display:inline-block;background:#223;border:1px solid var(--line);border-radius:5px;
+       padding:1px 7px;margin:1px 3px 1px 0;font-size:11.5px;color:var(--muted)}
+  .bad{color:var(--crit);font-weight:600}
+  .ok{color:var(--low);font-weight:600}
+  footer{margin-top:40px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>PCAP Triage Report<small>traffic_capture.pcapng &middot; generated 2026-11-24 17:29:00 UTC</small></h1>
+    <span class="badge CRITICAL">RISK: CRITICAL</span>
+  </header>
+
+  <div class="meta">
+    <div><b>Packets</b> 298</div>
+    <div><b>HTTP transactions</b> 28</div>
+    <div><b>Capture start</b> </div>
+    <div><b>Capture end</b> </div>
+    <div style="grid-column:1/3"><b>SHA-256</b> <span class="mono">dc4e142dda0461ea17ddcd7a17ad017293895a83f1efd95b732dddaa3b2ee351</span></div>
+  </div>
+
+  <h2>Key Findings</h2>
+  
+    
+    <div class="finding CRITICAL">
+      <span class="pill CRITICAL">CRITICAL</span>
+      <div><div class="t">3 plaintext credential submission(s) recovered</div><div class="d">Form credentials were transmitted unencrypted and are readable from the capture (OWASP A02).</div></div>
+    </div>
+    
+    <div class="finding HIGH">
+      <span class="pill HIGH">HIGH</span>
+      <div><div class="t">All application traffic is cleartext (no TLS)</div><div class="d">No HTTPS/TLS traffic was observed; every request, response, and header is exposed.</div></div>
+    </div>
+    
+    <div class="finding HIGH">
+      <span class="pill HIGH">HIGH</span>
+      <div><div class="t">Session cookie &#39;PHPSESSID&#39; is exposed/replayable</div><div class="d">Missing &#39;Secure&#39; flag — cookie can be sent over plaintext HTTP; Missing &#39;HttpOnly&#39; flag — cookie readable by JavaScript; No &#39;SameSite&#39; attribute — cross-site request exposure; Session token replayed in cleartext across 28 requests (replayable/hijackable)</div></div>
+    </div>
+    
+  
+
+  <h2>Recovered Credentials</h2>
+  
+  <table>
+    <tr><th>Host</th><th>Endpoint</th><th>Username</th><th>Password</th><th>Fields</th></tr>
+    
+    <tr>
+      <td class="mono">192.168.128.20</td>
+      <td class="mono">/login.php</td>
+      <td class="bad">admin</td>
+      <td class="bad">password</td>
+      <td><span class="tag">username</span><span class="tag">password</span><span class="tag">Login</span><span class="tag">user_token</span></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">192.168.128.20</td>
+      <td class="mono">/login.php</td>
+      <td class="bad">admin</td>
+      <td class="bad">wrongpass</td>
+      <td><span class="tag">username</span><span class="tag">password</span><span class="tag">Login</span><span class="tag">user_token</span></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">192.168.128.20</td>
+      <td class="mono">/login.php</td>
+      <td class="bad">admin</td>
+      <td class="bad">password</td>
+      <td><span class="tag">username</span><span class="tag">password</span><span class="tag">Login</span><span class="tag">user_token</span></td>
+    </tr>
+    
+  </table>
+  
+
+  <h2>Session Cookies</h2>
+  
+  <table>
+    <tr><th>Name</th><th>Secure</th><th>HttpOnly</th><th>SameSite</th><th>Reuse</th><th>Issues</th></tr>
+    
+    <tr>
+      <td class="mono">PHPSESSID</td>
+      <td class="bad">NO</td>
+      <td class="bad">NO</td>
+      <td class="bad">NONE</td>
+      <td>28&times;</td>
+      <td class="d">&bull; Missing &#39;Secure&#39; flag — cookie can be sent over plaintext HTTP<br>&bull; Missing &#39;HttpOnly&#39; flag — cookie readable by JavaScript<br>&bull; No &#39;SameSite&#39; attribute — cross-site request exposure<br>&bull; Session token replayed in cleartext across 28 requests (replayable/hijackable)<br></td>
+    </tr>
+    
+  </table>
+  
+
+  <h2>Authentication Artifacts</h2>
+  <p class="ok">No Basic-Auth, JWT, or API-key artifacts observed.</p>
+
+  <h2>TLS / Encrypted Sessions</h2>
+  <p class="bad">No TLS sessions observed — the capture contains no encrypted application traffic.</p>
+
+  <h2>Transport Encryption</h2>
+  <div class="bar"><span style="width:100.0%">100.0% cleartext</span></div>
+  <p class="d" style="color:var(--muted)">
+    Cleartext (HTTP): 332,761 bytes &middot;
+    Encrypted (TLS): 0 bytes &mdash;
+    <b>ALL traffic is unencrypted.</b>
+  </p>
+
+  <h2>HTTP Endpoints (19)</h2>
+  <table>
+    <tr><th>Method</th><th>Path</th><th>Hits</th><th>Status</th><th>Form fields</th></tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/login.php</td>
+      <td>3</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">POST</td>
+      <td class="mono">/login.php</td>
+      <td>3</td>
+      <td>302</td>
+      <td><span class="tag">Login</span><span class="tag">password</span><span class="tag">user_token</span><span class="tag">username</span></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/</td>
+      <td>2</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/index.php</td>
+      <td>2</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/security.php</td>
+      <td>2</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/vulnerabilities/xss_r/</td>
+      <td>2</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/vulnerabilities/xss_s/</td>
+      <td>2</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/about.php</td>
+      <td>1</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/docs/graphics/docker/detail.png</td>
+      <td>1</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/docs/graphics/docker/overview.png</td>
+      <td>1</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/instructions.php</td>
+      <td>1</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/logout.php</td>
+      <td>1</td>
+      <td>302</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/phpinfo.php</td>
+      <td>1</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">POST</td>
+      <td class="mono">/security.php</td>
+      <td>1</td>
+      <td>302</td>
+      <td><span class="tag">seclev_submit</span><span class="tag">security</span><span class="tag">user_token</span></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/vulnerabilities/cryptography/</td>
+      <td>1</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/vulnerabilities/exec/</td>
+      <td>1</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/vulnerabilities/sqli/</td>
+      <td>1</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">GET</td>
+      <td class="mono">/vulnerabilities/weak_id/</td>
+      <td>1</td>
+      <td>200</td>
+      <td></td>
+    </tr>
+    
+    <tr>
+      <td class="mono">POST</td>
+      <td class="mono">/vulnerabilities/xss_s/</td>
+      <td>1</td>
+      <td>200</td>
+      <td><span class="tag">btnSign</span><span class="tag">mtxMessage</span><span class="tag">txtName</span></td>
+    </tr>
+    
+  </table>
+
+  <footer>Generated by pcap-triage &middot; offline forensic analysis &middot; evidence integrity via SHA-256</footer>
+</div>
+</body>
+</html>
