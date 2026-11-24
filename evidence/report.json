@@ -2,7 +2,7 @@
   "meta": {
     "pcap_file": "traffic_capture.pcapng",
     "sha256": "dc4e142dda0461ea17ddcd7a17ad017293895a83f1efd95b732dddaa3b2ee351",
-    "generated_utc": "2026-11-24 17:29:00 UTC",
+    "generated_utc": "2026-11-24 18:46:04 UTC",
     "packet_count": 298,
     "http_transactions": 28
   },
