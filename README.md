@@ -12,7 +12,6 @@ Web-application traffic was captured in an isolated lab and analysed as forensic
 ![Wireshark](https://img.shields.io/badge/analysis-Wireshark%20%2F%20tshark-1679A7)
 ![Sigma](https://img.shields.io/badge/export-Sigma%20%7C%20STIX%202.1-purple)
 
-*CS3093 Cryptography — course project*
 **Zainab Taha** · **Natali Soukh**
 
 <img src="docs/screenshots/01-triage-report-overview.png" alt="pcap-triage HTML evidence report" width="820">
@@ -112,31 +111,6 @@ Expected console output:
 ---
 
 ## 🛠 The tool: `pcap-triage`
-
-### Usage
-
-```text
-usage: pcap-triage [-h] [-o OUTPUT] [-j JSON] [--sigma SIGMA] [--stix STIX] pcap
-
-positional arguments:
-  pcap                  path to the .pcap/.pcapng capture file
-
-options:
-  -o, --output OUTPUT   HTML report path         (default: report.html)
-  -j, --json JSON       JSON report path         (default: report.json)
-  --sigma SIGMA         Sigma rules output path  (default: sigma_rules.yml)
-  --stix STIX           STIX 2.1 bundle path     (default: stix_bundle.json)
-```
-
-Example with explicit output paths:
-
-```bash
-pcap-triage captures/incident-042.pcapng \
-    -o out/report.html -j out/report.json \
-    --sigma out/rules.yml --stix out/bundle.json
-```
-
-You can also run it without installing: `python -m pcap_triage.cli <capture.pcapng>`.
 
 ### What it detects
 
