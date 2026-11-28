@@ -461,9 +461,8 @@ All work was done in an **isolated host-only lab** against a **deliberately vuln
 ## 👥 Authors
 
 - **Zainab Taha**: [GitHub @zainabthaa](https://github.com/zainabthaa)
-- **Natali Soukh**
+- **Natali Soukh**: [GitHub @soukhnatali05](https://github.com/soukhnatali05)
 
-Built for **CS3093 — Cryptography**, Effat University, Fall 2026.
 
 ## 📄 License
 
