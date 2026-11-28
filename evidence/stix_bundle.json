@@ -1,176 +1,176 @@
 {
   "type": "bundle",
-  "id": "bundle--a96a9c22-1f9e-4bfa-8f71-57953381dd4a",
+  "id": "bundle--717f0b4d-189e-4a86-a4fd-ef3d5522d221",
   "objects": [
     {
       "type": "identity",
       "spec_version": "2.1",
-      "id": "identity--87cbe44f-d2ac-47a4-b976-695080a0e393",
-      "created": "2026-11-24T18:46:04.000Z",
-      "modified": "2026-11-24T18:46:04.000Z",
+      "id": "identity--611bfcfa-503d-4ed9-9298-5c58caf7a6b6",
+      "created": "2026-11-28T11:34:06.000Z",
+      "modified": "2026-11-28T11:34:06.000Z",
       "name": "pcap-triage",
       "identity_class": "tool"
     },
     {
       "type": "indicator",
       "spec_version": "2.1",
-      "id": "indicator--594aabf5-a977-4546-b515-b3b57e44aa01",
-      "created": "2026-11-24T18:46:04.000Z",
-      "modified": "2026-11-24T18:46:04.000Z",
+      "id": "indicator--89a73ebe-ef61-46c8-bf00-e4cfe5360f49",
+      "created": "2026-11-28T11:34:06.000Z",
+      "modified": "2026-11-28T11:34:06.000Z",
       "name": "client host 192.168.128.5",
       "indicator_types": [
         "anomalous-activity"
       ],
       "pattern": "[ipv4-addr:value = '192.168.128.5']",
       "pattern_type": "stix",
-      "valid_from": "2026-11-24T18:46:04.000Z"
+      "valid_from": "2026-11-28T11:34:06.000Z"
     },
     {
       "type": "indicator",
       "spec_version": "2.1",
-      "id": "indicator--6a0a1f8e-145f-44d9-9390-b5c80c4cbc70",
-      "created": "2026-11-24T18:46:04.000Z",
-      "modified": "2026-11-24T18:46:04.000Z",
+      "id": "indicator--30fee208-534a-4866-9193-22e70faf6432",
+      "created": "2026-11-28T11:34:06.000Z",
+      "modified": "2026-11-28T11:34:06.000Z",
       "name": "server host 192.168.128.20",
       "indicator_types": [
         "anomalous-activity"
       ],
       "pattern": "[ipv4-addr:value = '192.168.128.20']",
       "pattern_type": "stix",
-      "valid_from": "2026-11-24T18:46:04.000Z"
+      "valid_from": "2026-11-28T11:34:06.000Z"
     },
     {
       "type": "indicator",
       "spec_version": "2.1",
-      "id": "indicator--a9123ba4-ab21-470c-9eff-8e653cb2c2ef",
-      "created": "2026-11-24T18:46:04.000Z",
-      "modified": "2026-11-24T18:46:04.000Z",
+      "id": "indicator--069f3a02-6830-40fc-be75-a0a281d6eb63",
+      "created": "2026-11-28T11:34:06.000Z",
+      "modified": "2026-11-28T11:34:06.000Z",
       "name": "HTTP GET /login.php",
       "indicator_types": [
         "anomalous-activity"
       ],
       "pattern": "[url:value = 'http://192.168.128.20/login.php']",
       "pattern_type": "stix",
-      "valid_from": "2026-11-24T18:46:04.000Z"
+      "valid_from": "2026-11-28T11:34:06.000Z"
     },
     {
       "type": "indicator",
       "spec_version": "2.1",
-      "id": "indicator--f771bdfe-2089-487f-a222-b6e81ef65dd5",
-      "created": "2026-11-24T18:46:04.000Z",
-      "modified": "2026-11-24T18:46:04.000Z",
+      "id": "indicator--36d3581e-6a81-448a-9e4d-66c7e811769f",
+      "created": "2026-11-28T11:34:06.000Z",
+      "modified": "2026-11-28T11:34:06.000Z",
       "name": "HTTP POST /login.php",
       "indicator_types": [
         "anomalous-activity"
       ],
       "pattern": "[url:value = 'http://192.168.128.20/login.php']",
       "pattern_type": "stix",
-      "valid_from": "2026-11-24T18:46:04.000Z"
+      "valid_from": "2026-11-28T11:34:06.000Z"
     },
     {
       "type": "indicator",
       "spec_version": "2.1",
-      "id": "indicator--65a02b0f-dfdb-4095-93df-11e1028f1774",
-      "created": "2026-11-24T18:46:04.000Z",
-      "modified": "2026-11-24T18:46:04.000Z",
+      "id": "indicator--c5ce1bc0-6c2f-41ae-8dcc-d406cccb2241",
+      "created": "2026-11-28T11:34:06.000Z",
+      "modified": "2026-11-28T11:34:06.000Z",
       "name": "HTTP GET /",
       "indicator_types": [
         "anomalous-activity"
       ],
       "pattern": "[url:value = 'http://192.168.128.20/']",
       "pattern_type": "stix",
-      "valid_from": "2026-11-24T18:46:04.000Z"
+      "valid_from": "2026-11-28T11:34:06.000Z"
     },
     {
       "type": "indicator",
       "spec_version": "2.1",
-      "id": "indicator--a69b74a8-8c1c-4e85-84b1-bd15545e255e",
-      "created": "2026-11-24T18:46:04.000Z",
-      "modified": "2026-11-24T18:46:04.000Z",
+      "id": "indicator--99f46cee-7173-4f2f-89ad-06185bb32f11",
+      "created": "2026-11-28T11:34:06.000Z",
+      "modified": "2026-11-28T11:34:06.000Z",
       "name": "HTTP GET /index.php",
       "indicator_types": [
         "anomalous-activity"
       ],
       "pattern": "[url:value = 'http://192.168.128.20/index.php']",
       "pattern_type": "stix",
-      "valid_from": "2026-11-24T18:46:04.000Z"
+      "valid_from": "2026-11-28T11:34:06.000Z"
     },
     {
       "type": "indicator",
       "spec_version": "2.1",
-      "id": "indicator--d23001c8-0a0a-4182-b63f-236de2d354ac",
-      "created": "2026-11-24T18:46:04.000Z",
-      "modified": "2026-11-24T18:46:04.000Z",
+      "id": "indicator--efc2dddd-e225-43cc-9b6c-7493b04af5cb",
+      "created": "2026-11-28T11:34:06.000Z",
+      "modified": "2026-11-28T11:34:06.000Z",
       "name": "HTTP GET /security.php",
       "indicator_types": [
         "anomalous-activity"
       ],
       "pattern": "[url:value = 'http://192.168.128.20/security.php']",
       "pattern_type": "stix",
-      "valid_from": "2026-11-24T18:46:04.000Z"
+      "valid_from": "2026-11-28T11:34:06.000Z"
     },
     {
       "type": "indicator",
       "spec_version": "2.1",
-      "id": "indicator--334db244-2cb8-410e-b554-1fbf17038b1f",
-      "created": "2026-11-24T18:46:04.000Z",
-      "modified": "2026-11-24T18:46:04.000Z",
+      "id": "indicator--8ce604dd-7fcb-49a6-8ac6-d8a057276c57",
+      "created": "2026-11-28T11:34:06.000Z",
+      "modified": "2026-11-28T11:34:06.000Z",
       "name": "HTTP GET /vulnerabilities/xss_r/",
       "indicator_types": [
         "anomalous-activity"
       ],
       "pattern": "[url:value = 'http://192.168.128.20/vulnerabilities/xss_r/']",
       "pattern_type": "stix",
-      "valid_from": "2026-11-24T18:46:04.000Z"
+      "valid_from": "2026-11-28T11:34:06.000Z"
     },
     {
       "type": "indicator",
       "spec_version": "2.1",
-      "id": "indicator--89f125b8-6313-4e95-b3bf-236a6bcf5356",
-      "created": "2026-11-24T18:46:04.000Z",
-      "modified": "2026-11-24T18:46:04.000Z",
+      "id": "indicator--fd91b154-6be7-4f0f-9251-e58a978f1cf8",
+      "created": "2026-11-28T11:34:06.000Z",
+      "modified": "2026-11-28T11:34:06.000Z",
       "name": "HTTP GET /vulnerabilities/xss_s/",
       "indicator_types": [
         "anomalous-activity"
       ],
       "pattern": "[url:value = 'http://192.168.128.20/vulnerabilities/xss_s/']",
       "pattern_type": "stix",
-      "valid_from": "2026-11-24T18:46:04.000Z"
+      "valid_from": "2026-11-28T11:34:06.000Z"
     },
     {
       "type": "indicator",
       "spec_version": "2.1",
-      "id": "indicator--1ead240c-2f71-4e41-8dd3-aaac8a5f3930",
-      "created": "2026-11-24T18:46:04.000Z",
-      "modified": "2026-11-24T18:46:04.000Z",
+      "id": "indicator--48f1b871-1411-4040-9ddf-5aa42dd4231d",
+      "created": "2026-11-28T11:34:06.000Z",
+      "modified": "2026-11-28T11:34:06.000Z",
       "name": "HTTP GET /about.php",
       "indicator_types": [
         "anomalous-activity"
       ],
       "pattern": "[url:value = 'http://192.168.128.20/about.php']",
       "pattern_type": "stix",
-      "valid_from": "2026-11-24T18:46:04.000Z"
+      "valid_from": "2026-11-28T11:34:06.000Z"
     },
     {
       "type": "indicator",
       "spec_version": "2.1",
-      "id": "indicator--142cf000-d879-42a1-95a4-90d9b0e8b30c",
-      "created": "2026-11-24T18:46:04.000Z",
-      "modified": "2026-11-24T18:46:04.000Z",
+      "id": "indicator--28fdca4a-b57d-4e94-b355-8a2d6890bd6a",
+      "created": "2026-11-28T11:34:06.000Z",
+      "modified": "2026-11-28T11:34:06.000Z",
       "name": "Observed client User-Agent",
       "indicator_types": [
         "anomalous-activity"
       ],
       "pattern": "[network-traffic:extensions.'http-request-ext'.request_header.'User-Agent' = 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0']",
       "pattern_type": "stix",
-      "valid_from": "2026-11-24T18:46:04.000Z"
+      "valid_from": "2026-11-28T11:34:06.000Z"
     },
     {
       "type": "indicator",
       "spec_version": "2.1",
-      "id": "indicator--cb1eda9f-1f64-41c9-b569-27d3e23b6f16",
-      "created": "2026-11-24T18:46:04.000Z",
-      "modified": "2026-11-24T18:46:04.000Z",
+      "id": "indicator--de1592a0-b5f9-4d19-be7d-8e695e9296e5",
+      "created": "2026-11-28T11:34:06.000Z",
+      "modified": "2026-11-28T11:34:06.000Z",
       "name": "Cleartext credentials transmitted over HTTP",
       "indicator_types": [
         "anomalous-activity",
@@ -178,7 +178,7 @@
       ],
       "pattern": "[network-traffic:protocols[*] = 'http']",
       "pattern_type": "stix",
-      "valid_from": "2026-11-24T18:46:04.000Z"
+      "valid_from": "2026-11-28T11:34:06.000Z"
     }
   ]
 }

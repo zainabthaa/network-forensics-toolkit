@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pcap-triage"
-version = "1.1.0"
+version = "1.2.0"
 description = "Offline PCAP triage for web-traffic forensics: recovers credentials, audits cookies, detects auth artifacts, and exports Sigma/STIX."
 readme = "README.md"
 requires-python = ">=3.9"

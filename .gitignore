@@ -13,3 +13,5 @@ dist/
 /sigma_rules.yml
 /stix_bundle.json
 /demo.html
+out/
+/flows.csv

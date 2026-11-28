@@ -2,9 +2,12 @@
   "meta": {
     "pcap_file": "traffic_capture.pcapng",
     "sha256": "dc4e142dda0461ea17ddcd7a17ad017293895a83f1efd95b732dddaa3b2ee351",
-    "generated_utc": "2026-11-24 18:46:04 UTC",
+    "generated_utc": "2026-11-28 11:34:06 UTC",
     "packet_count": 298,
-    "http_transactions": 28
+    "http_transactions": 28,
+    "capture_start_utc": "2026-11-24 12:34:08 UTC",
+    "capture_end_utc": "2026-11-24 12:38:35 UTC",
+    "duration_s": 266.107
   },
   "risk_level": "CRITICAL",
   "findings": [
@@ -25,6 +28,18 @@
       "category": "Session Token Exposure",
       "title": "Session cookie 'PHPSESSID' is exposed/replayable",
       "detail": "Missing 'Secure' flag \u2014 cookie can be sent over plaintext HTTP; Missing 'HttpOnly' flag \u2014 cookie readable by JavaScript; No 'SameSite' attribute \u2014 cross-site request exposure; Session token replayed in cleartext across 28 requests (replayable/hijackable)"
+    },
+    {
+      "severity": "HIGH",
+      "category": "Session Management",
+      "title": "Session ID is not regenerated at login (session fixation)",
+      "detail": "The same session ID was kept across every login; 1 distinct session ID(s) seen in the whole capture (OWASP A07, CWE-384)."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Session Management",
+      "title": "Session ID survives logout",
+      "detail": "After /logout the client kept presenting the pre-logout session ID; the token was not rotated or invalidated (CWE-613)."
     }
   ],
   "credentials": [
@@ -286,6 +301,5022 @@
       ]
     }
   ],
+  "session_rotation": {
+    "events": [
+      {
+        "event": "login",
+        "uri": "/login.php",
+        "cookie": "PHPSESSID",
+        "id_before": "fda8bd5413fc2245525bd8eeef541dec",
+        "id_after": "fda8bd5413fc2245525bd8eeef541dec",
+        "rotated": false
+      },
+      {
+        "event": "logout",
+        "uri": "/logout.php",
+        "cookie": "PHPSESSID",
+        "id_before": "fda8bd5413fc2245525bd8eeef541dec",
+        "id_after": "fda8bd5413fc2245525bd8eeef541dec",
+        "rotated": false
+      },
+      {
+        "event": "login",
+        "uri": "/login.php",
+        "cookie": "PHPSESSID",
+        "id_before": "fda8bd5413fc2245525bd8eeef541dec",
+        "id_after": "fda8bd5413fc2245525bd8eeef541dec",
+        "rotated": false
+      },
+      {
+        "event": "login",
+        "uri": "/login.php",
+        "cookie": "PHPSESSID",
+        "id_before": "fda8bd5413fc2245525bd8eeef541dec",
+        "id_after": "fda8bd5413fc2245525bd8eeef541dec",
+        "rotated": false
+      }
+    ],
+    "distinct_session_ids": 1,
+    "fixation": true,
+    "logout_not_invalidated": true
+  },
+  "network": {
+    "summary": {
+      "duration_s": 266.107,
+      "total_packets": 298,
+      "total_bytes": 352893,
+      "avg_throughput_bps": 10609.1,
+      "peak_throughput_bps": 688037.3,
+      "peak_at_s": 48,
+      "flow_count": 22,
+      "tcp_flows": 22,
+      "udp_flows": 0,
+      "complete_handshakes": 22,
+      "closed_fin": 22,
+      "closed_rst": 0,
+      "left_open": 0,
+      "max_parallel_conns": 2,
+      "flows_with_http": 22,
+      "max_requests_per_flow": 2,
+      "mean_flow_duration_s": 5.048,
+      "mean_flow_bytes": 16011.5,
+      "host_count": 4,
+      "server_closed": 11,
+      "simultaneous_close": 6,
+      "idle_before_fin_s": {
+        "min": 5.001,
+        "max": 5.017
+      }
+    },
+    "insights": [
+      "22/22 TCP flows last ~5.0s from SYN to FIN regardless of how much data they carry: connection lifetime is set by the HTTP keep-alive idle timeout (about 5s), not by user activity. Every connection is closed 5.00\u20135.02s after its last data packet; in 6 flows both FINs cross on the wire (simultaneous close), so client and server time out together.",
+      "Traffic is strongly asymmetric: 93.1% of bytes flow server-to-client (page and image downloads), 6.9% client-to-server.",
+      "The two largest flows (#7, #6) carry 73.3% of all TCP bytes: GET /docs/graphics/docker/detail.png; GET /instructions.php, GET /docs/graphics/docker/overview.png.",
+      "The browser opened up to 2 parallel TCP connections (peak at ~48s) to fetch embedded resources concurrently.",
+      "Connections are reused for up to 2 requests (HTTP/1.1 persistent connections).",
+      "Every TCP flow has a complete three-way handshake and an orderly FIN teardown; no resets, scans or half-open connections were observed.",
+      "100% of TCP flows are cleartext HTTP on port 80; no flow is encrypted.",
+      "The server's packets arrive with TTL 63 while the client's leave with 64: both look like Linux (initial TTL 64), but the server sits 1 routed hop away despite sharing the subnet, consistent with DVWA running in a container behind the VM's bridge.",
+      "Every MAC address is locally administered (randomised/virtual), as expected for VM network adapters; no vendor OUI is present.",
+      "A third device (3e:06:30:63:f6:65) only sends IPv6 router advertisements to ff02::1: the hypervisor's virtual-network gateway, not a participant in the session.",
+      "39 frames are larger than the 1,514-byte Ethernet MTU (up to 33,090 B): an artefact of segmentation offload (GRO/LRO) on the capturing NIC, not jumbo frames on the wire. Byte counts are right; per-frame counts are understated.",
+      "TCP health is clean: handshake RTT 0.693\u20134.158 ms (median 1.777 ms), 0 retransmissions, 0 zero-window events. The slowest server response is POST /login.php at 71.913 ms.",
+      "Separated by idle gaps of \u226510s, the session forms 7 activity bursts; the median time between new connections is 11.224s, a human browsing pace rather than automated traffic.",
+      "Only 2 IPv4 hosts exchange application traffic; the remaining frames are link-local ARP / IPv6 neighbour-discovery noise."
+    ],
+    "flows": [
+      {
+        "flow_id": 1,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 42750,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:34:08.925",
+        "end_utc": "12:34:14.003",
+        "rel_start": 0.002,
+        "rel_end": 5.08,
+        "duration_s": 5.078,
+        "packets": 11,
+        "bytes": 2178,
+        "pkts_fwd": 6,
+        "pkts_rev": 5,
+        "bytes_fwd": 858,
+        "bytes_rev": 1320,
+        "payload_fwd": 454,
+        "payload_rev": 982,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "client",
+        "first_frame": 3,
+        "http_requests": [
+          "GET /login.php"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 3.073,
+        "setup_ms": 3.138,
+        "ttfb_ms": 63.522,
+        "teardown": "simultaneous",
+        "idle_before_fin_s": 5.005,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 2,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 49770,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:34:20.021",
+        "end_utc": "12:34:25.110",
+        "rel_start": 11.098,
+        "rel_end": 16.188,
+        "duration_s": 5.09,
+        "packets": 14,
+        "bytes": 5357,
+        "pkts_fwd": 8,
+        "pkts_rev": 6,
+        "bytes_fwd": 1627,
+        "bytes_rev": 3730,
+        "payload_fwd": 1091,
+        "payload_rev": 3326,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "client",
+        "first_frame": 15,
+        "http_requests": [
+          "POST /login.php",
+          "GET /index.php"
+        ],
+        "http_status": [
+          "302",
+          "200"
+        ],
+        "handshake_rtt_ms": 0.974,
+        "setup_ms": 1.003,
+        "ttfb_ms": 71.913,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.001,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 3,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 57264,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:34:32.750",
+        "end_utc": "12:34:37.791",
+        "rel_start": 23.828,
+        "rel_end": 28.868,
+        "duration_s": 5.041,
+        "packets": 11,
+        "bytes": 3473,
+        "pkts_fwd": 6,
+        "pkts_rev": 5,
+        "bytes_fwd": 858,
+        "bytes_rev": 2615,
+        "payload_fwd": 454,
+        "payload_rev": 2277,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "client",
+        "first_frame": 29,
+        "http_requests": [
+          "GET /security.php"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 2.468,
+        "setup_ms": 2.533,
+        "ttfb_ms": 27.86,
+        "teardown": "simultaneous",
+        "idle_before_fin_s": 5.003,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 4,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 57278,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:34:40.561",
+        "end_utc": "12:34:45.601",
+        "rel_start": 31.638,
+        "rel_end": 36.678,
+        "duration_s": 5.04,
+        "packets": 13,
+        "bytes": 4776,
+        "pkts_fwd": 7,
+        "pkts_rev": 6,
+        "bytes_fwd": 1562,
+        "bytes_rev": 3214,
+        "payload_fwd": 1092,
+        "payload_rev": 2810,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "server",
+        "first_frame": 40,
+        "http_requests": [
+          "POST /security.php",
+          "GET /security.php"
+        ],
+        "http_status": [
+          "302",
+          "200"
+        ],
+        "handshake_rtt_ms": 1.436,
+        "setup_ms": 1.5,
+        "ttfb_ms": 11.595,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.01,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 5,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 52398,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:34:49.198",
+        "end_utc": "12:34:54.240",
+        "rel_start": 40.275,
+        "rel_end": 45.317,
+        "duration_s": 5.042,
+        "packets": 10,
+        "bytes": 3941,
+        "pkts_fwd": 5,
+        "pkts_rev": 5,
+        "bytes_fwd": 783,
+        "bytes_rev": 3158,
+        "payload_fwd": 445,
+        "payload_rev": 2820,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "server",
+        "first_frame": 53,
+        "http_requests": [
+          "GET /"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 3.07,
+        "setup_ms": 3.148,
+        "ttfb_ms": 22.307,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.013,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 6,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 57310,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:34:57.860",
+        "end_utc": "12:35:03.001",
+        "rel_start": 48.937,
+        "rel_end": 54.079,
+        "duration_s": 5.141,
+        "packets": 26,
+        "bytes": 90807,
+        "pkts_fwd": 13,
+        "pkts_rev": 13,
+        "bytes_fwd": 1773,
+        "bytes_rev": 89034,
+        "payload_fwd": 907,
+        "payload_rev": 88168,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "server",
+        "first_frame": 64,
+        "http_requests": [
+          "GET /instructions.php",
+          "GET /docs/graphics/docker/overview.png"
+        ],
+        "http_status": [
+          "200",
+          "200"
+        ],
+        "handshake_rtt_ms": 1.557,
+        "setup_ms": 1.623,
+        "ttfb_ms": 61.896,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.005,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 7,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 57316,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:34:57.976",
+        "end_utc": "12:35:03.002",
+        "rel_start": 49.053,
+        "rel_end": 54.079,
+        "duration_s": 5.026,
+        "packets": 36,
+        "bytes": 167485,
+        "pkts_fwd": 18,
+        "pkts_rev": 18,
+        "bytes_fwd": 1652,
+        "bytes_rev": 165833,
+        "payload_fwd": 456,
+        "payload_rev": 164637,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "server",
+        "first_frame": 76,
+        "http_requests": [
+          "GET /docs/graphics/docker/detail.png"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 0.693,
+        "setup_ms": 0.719,
+        "ttfb_ms": 17.039,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.001,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 8,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 46078,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:35:21.874",
+        "end_utc": "12:35:26.914",
+        "rel_start": 72.951,
+        "rel_end": 77.991,
+        "duration_s": 5.04,
+        "packets": 11,
+        "bytes": 3024,
+        "pkts_fwd": 6,
+        "pkts_rev": 5,
+        "bytes_fwd": 874,
+        "bytes_rev": 2150,
+        "payload_fwd": 470,
+        "payload_rev": 1812,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "client",
+        "first_frame": 126,
+        "http_requests": [
+          "GET /vulnerabilities/sqli/"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 1.906,
+        "setup_ms": 1.967,
+        "ttfb_ms": 30.444,
+        "teardown": "simultaneous",
+        "idle_before_fin_s": 5.005,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 9,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 56282,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:35:42.958",
+        "end_utc": "12:35:47.994",
+        "rel_start": 94.035,
+        "rel_end": 99.071,
+        "duration_s": 5.036,
+        "packets": 10,
+        "bytes": 2792,
+        "pkts_fwd": 5,
+        "pkts_rev": 5,
+        "bytes_fwd": 816,
+        "bytes_rev": 1976,
+        "payload_fwd": 478,
+        "payload_rev": 1638,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "server",
+        "first_frame": 137,
+        "http_requests": [
+          "GET /vulnerabilities/weak_id/"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 2.23,
+        "setup_ms": 2.298,
+        "ttfb_ms": 20.946,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.01,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 10,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 49422,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:35:52.261",
+        "end_utc": "12:35:57.299",
+        "rel_start": 103.339,
+        "rel_end": 108.376,
+        "duration_s": 5.038,
+        "packets": 10,
+        "bytes": 3722,
+        "pkts_fwd": 5,
+        "pkts_rev": 5,
+        "bytes_fwd": 824,
+        "bytes_rev": 2898,
+        "payload_fwd": 486,
+        "payload_rev": 2560,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "server",
+        "first_frame": 147,
+        "http_requests": [
+          "GET /vulnerabilities/cryptography/"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 1.042,
+        "setup_ms": 1.091,
+        "ttfb_ms": 26.975,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.006,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 11,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 49434,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:35:58.973",
+        "end_utc": "12:36:04.005",
+        "rel_start": 110.05,
+        "rel_end": 115.082,
+        "duration_s": 5.032,
+        "packets": 11,
+        "bytes": 3090,
+        "pkts_fwd": 6,
+        "pkts_rev": 5,
+        "bytes_fwd": 888,
+        "bytes_rev": 2202,
+        "payload_fwd": 484,
+        "payload_rev": 1864,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "client",
+        "first_frame": 157,
+        "http_requests": [
+          "GET /vulnerabilities/xss_r/"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 1.019,
+        "setup_ms": 1.041,
+        "ttfb_ms": 20.985,
+        "teardown": "simultaneous",
+        "idle_before_fin_s": 5.007,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 12,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 49934,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:36:10.861",
+        "end_utc": "12:36:15.891",
+        "rel_start": 121.938,
+        "rel_end": 126.969,
+        "duration_s": 5.031,
+        "packets": 10,
+        "bytes": 3044,
+        "pkts_fwd": 6,
+        "pkts_rev": 4,
+        "bytes_fwd": 893,
+        "bytes_rev": 2151,
+        "payload_fwd": 489,
+        "payload_rev": 1879,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "client",
+        "first_frame": 168,
+        "http_requests": [
+          "GET /vulnerabilities/xss_r/?name=Zainab"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 1.654,
+        "setup_ms": 1.706,
+        "ttfb_ms": 18.847,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.005,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 13,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 57620,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:36:27.529",
+        "end_utc": "12:36:32.577",
+        "rel_start": 138.606,
+        "rel_end": 143.655,
+        "duration_s": 5.049,
+        "packets": 10,
+        "bytes": 3243,
+        "pkts_fwd": 5,
+        "pkts_rev": 5,
+        "bytes_fwd": 827,
+        "bytes_rev": 2416,
+        "payload_fwd": 489,
+        "payload_rev": 2078,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "server",
+        "first_frame": 178,
+        "http_requests": [
+          "GET /vulnerabilities/xss_s/"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 4.158,
+        "setup_ms": 4.219,
+        "ttfb_ms": 36.586,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.007,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 14,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 51562,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:36:42.951",
+        "end_utc": "12:36:47.999",
+        "rel_start": 154.029,
+        "rel_end": 159.077,
+        "duration_s": 5.048,
+        "packets": 10,
+        "bytes": 3416,
+        "pkts_fwd": 5,
+        "pkts_rev": 5,
+        "bytes_fwd": 983,
+        "bytes_rev": 2433,
+        "payload_fwd": 645,
+        "payload_rev": 2095,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "server",
+        "first_frame": 188,
+        "http_requests": [
+          "POST /vulnerabilities/xss_s/"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 1.548,
+        "setup_ms": 1.624,
+        "ttfb_ms": 33.213,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.01,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 15,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 60588,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:36:54.176",
+        "end_utc": "12:36:59.211",
+        "rel_start": 165.253,
+        "rel_end": 170.288,
+        "duration_s": 5.035,
+        "packets": 13,
+        "bytes": 3171,
+        "pkts_fwd": 7,
+        "pkts_rev": 6,
+        "bytes_fwd": 1399,
+        "bytes_rev": 1772,
+        "payload_fwd": 929,
+        "payload_rev": 1368,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "server",
+        "first_frame": 198,
+        "http_requests": [
+          "GET /logout.php",
+          "GET /login.php"
+        ],
+        "http_status": [
+          "302",
+          "200"
+        ],
+        "handshake_rtt_ms": 2.93,
+        "setup_ms": 2.985,
+        "ttfb_ms": 4.984,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.006,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 16,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 60590,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:37:00.620",
+        "end_utc": "12:37:05.672",
+        "rel_start": 171.698,
+        "rel_end": 176.749,
+        "duration_s": 5.051,
+        "packets": 13,
+        "bytes": 3442,
+        "pkts_fwd": 7,
+        "pkts_rev": 6,
+        "bytes_fwd": 1562,
+        "bytes_rev": 1880,
+        "payload_fwd": 1092,
+        "payload_rev": 1476,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "server",
+        "first_frame": 212,
+        "http_requests": [
+          "POST /login.php",
+          "GET /login.php"
+        ],
+        "http_status": [
+          "302",
+          "200"
+        ],
+        "handshake_rtt_ms": 0.711,
+        "setup_ms": 0.729,
+        "ttfb_ms": 16.247,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.008,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 17,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 41648,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:37:13.556",
+        "end_utc": "12:37:18.601",
+        "rel_start": 184.633,
+        "rel_end": 189.678,
+        "duration_s": 5.045,
+        "packets": 13,
+        "bytes": 5291,
+        "pkts_fwd": 8,
+        "pkts_rev": 5,
+        "bytes_fwd": 1627,
+        "bytes_rev": 3664,
+        "payload_fwd": 1091,
+        "payload_rev": 3326,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "client",
+        "first_frame": 225,
+        "http_requests": [
+          "POST /login.php",
+          "GET /index.php"
+        ],
+        "http_status": [
+          "302",
+          "200"
+        ],
+        "handshake_rtt_ms": 1.777,
+        "setup_ms": 1.831,
+        "ttfb_ms": 19.11,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.003,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 18,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 34250,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:37:21.786",
+        "end_utc": "12:37:26.846",
+        "rel_start": 192.863,
+        "rel_end": 197.924,
+        "duration_s": 5.06,
+        "packets": 16,
+        "bytes": 26274,
+        "pkts_fwd": 8,
+        "pkts_rev": 8,
+        "bytes_fwd": 989,
+        "bytes_rev": 25285,
+        "payload_fwd": 453,
+        "payload_rev": 24749,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "server",
+        "first_frame": 238,
+        "http_requests": [
+          "GET /phpinfo.php"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 1.107,
+        "setup_ms": 1.154,
+        "ttfb_ms": 52.147,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.005,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 19,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 34262,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:37:28.795",
+        "end_utc": "12:37:33.817",
+        "rel_start": 199.872,
+        "rel_end": 204.894,
+        "duration_s": 5.022,
+        "packets": 11,
+        "bytes": 3504,
+        "pkts_fwd": 6,
+        "pkts_rev": 5,
+        "bytes_fwd": 855,
+        "bytes_rev": 2649,
+        "payload_fwd": 451,
+        "payload_rev": 2311,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "client",
+        "first_frame": 254,
+        "http_requests": [
+          "GET /about.php"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 0.71,
+        "setup_ms": 0.738,
+        "ttfb_ms": 8.432,
+        "teardown": "simultaneous",
+        "idle_before_fin_s": 5.008,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 20,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 32818,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:37:41.286",
+        "end_utc": "12:37:46.330",
+        "rel_start": 212.363,
+        "rel_end": 217.407,
+        "duration_s": 5.044,
+        "packets": 10,
+        "bytes": 2981,
+        "pkts_fwd": 6,
+        "pkts_rev": 4,
+        "bytes_fwd": 867,
+        "bytes_rev": 2114,
+        "payload_fwd": 463,
+        "payload_rev": 1842,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "client",
+        "first_frame": 265,
+        "http_requests": [
+          "GET /vulnerabilities/exec/"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 2.532,
+        "setup_ms": 2.621,
+        "ttfb_ms": 29.24,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.005,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 21,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 40632,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:37:56.918",
+        "end_utc": "12:38:01.937",
+        "rel_start": 227.995,
+        "rel_end": 233.014,
+        "duration_s": 5.018,
+        "packets": 10,
+        "bytes": 3950,
+        "pkts_fwd": 6,
+        "pkts_rev": 4,
+        "bytes_fwd": 858,
+        "bytes_rev": 3092,
+        "payload_fwd": 454,
+        "payload_rev": 2820,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "client",
+        "first_frame": 275,
+        "http_requests": [
+          "GET /"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 1.902,
+        "setup_ms": 1.979,
+        "ttfb_ms": 11.223,
+        "teardown": "responsive",
+        "idle_before_fin_s": 5.004,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      },
+      {
+        "flow_id": 22,
+        "proto": "TCP",
+        "service": "HTTP",
+        "src_ip": "192.168.128.5",
+        "src_port": 42726,
+        "dst_ip": "192.168.128.20",
+        "dst_port": 80,
+        "start_utc": "12:38:29.894",
+        "end_utc": "12:38:34.936",
+        "rel_start": 260.971,
+        "rel_end": 266.013,
+        "duration_s": 5.042,
+        "packets": 11,
+        "bytes": 3292,
+        "pkts_fwd": 6,
+        "pkts_rev": 5,
+        "bytes_fwd": 859,
+        "bytes_rev": 2433,
+        "payload_fwd": 455,
+        "payload_rev": 2095,
+        "tcp_flags": "FSPA",
+        "handshake": "complete",
+        "close": "FIN",
+        "closed_by": "client",
+        "first_frame": 286,
+        "http_requests": [
+          "GET /vulnerabilities/xss_s/"
+        ],
+        "http_status": [
+          "200"
+        ],
+        "handshake_rtt_ms": 2.29,
+        "setup_ms": 2.367,
+        "ttfb_ms": 20.428,
+        "teardown": "simultaneous",
+        "idle_before_fin_s": 5.017,
+        "retransmissions": 0,
+        "zero_window": 0,
+        "client_opts": {
+          "mss": 1460,
+          "wscale": 9,
+          "window": 64240,
+          "ttl": 64
+        },
+        "server_opts": {
+          "mss": 1460,
+          "wscale": 7,
+          "window": 65160,
+          "ttl": 63
+        }
+      }
+    ],
+    "conversations": {
+      "ethernet": [
+        {
+          "layer": "Ethernet",
+          "a": "9e:1b:0d:31:12:2b",
+          "b": "e6:bd:f3:8d:47:31",
+          "frames": 293,
+          "bytes": 352379,
+          "bytes_a_to_b": 24276,
+          "bytes_b_to_a": 328103,
+          "rel_start": 0.002,
+          "duration_s": 266.105,
+          "bps": 10593.7,
+          "protocols": []
+        },
+        {
+          "layer": "Ethernet",
+          "a": "33:33:00:00:00:01",
+          "b": "3e:06:30:63:f6:65",
+          "frames": 4,
+          "bytes": 472,
+          "bytes_a_to_b": 0,
+          "bytes_b_to_a": 472,
+          "rel_start": 3.333,
+          "duration_s": 241.12,
+          "bps": 15.7,
+          "protocols": []
+        },
+        {
+          "layer": "Ethernet",
+          "a": "9e:1b:0d:31:12:2b",
+          "b": "ff:ff:ff:ff:ff:ff",
+          "frames": 1,
+          "bytes": 42,
+          "bytes_a_to_b": 42,
+          "bytes_b_to_a": 0,
+          "rel_start": 0.0,
+          "duration_s": 0.0,
+          "bps": 0.0,
+          "protocols": []
+        }
+      ],
+      "ip": [
+        {
+          "layer": "IP",
+          "a": "192.168.128.20",
+          "b": "192.168.128.5",
+          "frames": 290,
+          "bytes": 352253,
+          "bytes_a_to_b": 328019,
+          "bytes_b_to_a": 24234,
+          "rel_start": 0.002,
+          "duration_s": 266.011,
+          "bps": 10593.6,
+          "protocols": [
+            "TCP"
+          ]
+        },
+        {
+          "layer": "IP",
+          "a": "fe80::3c06:30ff:fe63:f665",
+          "b": "ff02::1",
+          "frames": 4,
+          "bytes": 472,
+          "bytes_a_to_b": 472,
+          "bytes_b_to_a": 0,
+          "rel_start": 3.333,
+          "duration_s": 241.12,
+          "bps": 15.7,
+          "protocols": [
+            "ICMPv6"
+          ]
+        }
+      ]
+    },
+    "l2_inventory": [
+      {
+        "mac": "9e:1b:0d:31:12:2b",
+        "ips": [
+          "192.168.128.5"
+        ],
+        "frames": 157,
+        "locally_administered": true,
+        "observed_ttl": 64,
+        "initial_ttl_guess": 64,
+        "hops_away": 0,
+        "os_family_guess": "Linux/Unix",
+        "arp_frames": 2,
+        "nd_frames": 0,
+        "role": "client"
+      },
+      {
+        "mac": "e6:bd:f3:8d:47:31",
+        "ips": [
+          "192.168.128.20"
+        ],
+        "frames": 137,
+        "locally_administered": true,
+        "observed_ttl": 63,
+        "initial_ttl_guess": 64,
+        "hops_away": 1,
+        "os_family_guess": "Linux/Unix",
+        "arp_frames": 2,
+        "nd_frames": 0,
+        "role": "web server"
+      },
+      {
+        "mac": "3e:06:30:63:f6:65",
+        "ips": [
+          "fe80::3c06:30ff:fe63:f665"
+        ],
+        "frames": 4,
+        "locally_administered": true,
+        "observed_ttl": null,
+        "initial_ttl_guess": null,
+        "hops_away": null,
+        "os_family_guess": null,
+        "arp_frames": 0,
+        "nd_frames": 4,
+        "role": "IPv6 router advertiser (virtual-network gateway)"
+      }
+    ],
+    "packet_lengths": {
+      "buckets": [
+        {
+          "range": "0\u201379",
+          "frames": 216,
+          "pct": 72.5,
+          "bytes": 14512
+        },
+        {
+          "range": "80\u2013159",
+          "frames": 4,
+          "pct": 1.3,
+          "bytes": 472
+        },
+        {
+          "range": "160\u2013319",
+          "frames": 2,
+          "pct": 0.7,
+          "bytes": 456
+        },
+        {
+          "range": "320\u2013639",
+          "frames": 28,
+          "pct": 9.4,
+          "bytes": 14800
+        },
+        {
+          "range": "640\u20131279",
+          "frames": 8,
+          "pct": 2.7,
+          "bytes": 6711
+        },
+        {
+          "range": "1280\u20131514",
+          "frames": 1,
+          "pct": 0.3,
+          "bytes": 1514
+        },
+        {
+          "range": "1515\u20139999",
+          "frames": 27,
+          "pct": 9.1,
+          "bytes": 101411
+        },
+        {
+          "range": "\u226510000",
+          "frames": 12,
+          "pct": 4.0,
+          "bytes": 213017
+        }
+      ],
+      "min": 42,
+      "max": 33090,
+      "median": 66,
+      "mean": 1184.2,
+      "over_mtu_frames": 39
+    },
+    "tcp_health": {
+      "handshake_rtt_ms": {
+        "min": 0.693,
+        "median": 1.777,
+        "max": 4.158,
+        "mean": 1.854
+      },
+      "ttfb_ms": {
+        "min": 4.984,
+        "median": 22.307,
+        "max": 71.913,
+        "mean": 28.452
+      },
+      "retransmissions": 0,
+      "zero_window": 0,
+      "client_syn_options": {
+        "mss": 1460,
+        "wscale": 9,
+        "window": 64240,
+        "ttl": 64
+      },
+      "server_synack_options": {
+        "mss": 1460,
+        "wscale": 7,
+        "window": 65160,
+        "ttl": 63
+      },
+      "slowest_responses": [
+        {
+          "flow_id": 2,
+          "ttfb_ms": 71.913,
+          "request": "POST /login.php"
+        },
+        {
+          "flow_id": 1,
+          "ttfb_ms": 63.522,
+          "request": "GET /login.php"
+        },
+        {
+          "flow_id": 6,
+          "ttfb_ms": 61.896,
+          "request": "GET /instructions.php"
+        }
+      ]
+    },
+    "activity": {
+      "gap_threshold_s": 10.0,
+      "bursts": [
+        {
+          "id": 1,
+          "start": 0.0,
+          "end": 54.1,
+          "flows": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "requests": [
+            "GET /login.php",
+            "POST /login.php",
+            "GET /index.php",
+            "GET /security.php",
+            "POST /security.php",
+            "GET /security.php",
+            "GET /",
+            "GET /instructions.php",
+            "GET /docs/graphics/docker/overview.png",
+            "GET /docs/graphics/docker/detail.png"
+          ]
+        },
+        {
+          "id": 2,
+          "start": 73.0,
+          "end": 78.0,
+          "flows": [
+            8
+          ],
+          "requests": [
+            "GET /vulnerabilities/sqli/"
+          ]
+        },
+        {
+          "id": 3,
+          "start": 94.0,
+          "end": 127.0,
+          "flows": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "requests": [
+            "GET /vulnerabilities/weak_id/",
+            "GET /vulnerabilities/cryptography/",
+            "GET /vulnerabilities/xss_r/",
+            "GET /vulnerabilities/xss_r/?name=Zainab"
+          ]
+        },
+        {
+          "id": 4,
+          "start": 138.6,
+          "end": 143.7,
+          "flows": [
+            13
+          ],
+          "requests": [
+            "GET /vulnerabilities/xss_s/"
+          ]
+        },
+        {
+          "id": 5,
+          "start": 154.0,
+          "end": 217.4,
+          "flows": [
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ],
+          "requests": [
+            "POST /vulnerabilities/xss_s/",
+            "GET /logout.php",
+            "GET /login.php",
+            "POST /login.php",
+            "GET /login.php",
+            "POST /login.php",
+            "GET /index.php",
+            "GET /phpinfo.php",
+            "GET /about.php",
+            "GET /vulnerabilities/exec/"
+          ]
+        },
+        {
+          "id": 6,
+          "start": 228.0,
+          "end": 233.0,
+          "flows": [
+            21
+          ],
+          "requests": [
+            "GET /"
+          ]
+        },
+        {
+          "id": 7,
+          "start": 261.0,
+          "end": 266.0,
+          "flows": [
+            22
+          ],
+          "requests": [
+            "GET /vulnerabilities/xss_s/"
+          ]
+        }
+      ],
+      "inter_flow_start_s": {
+        "min": 0.116,
+        "median": 11.224,
+        "max": 32.976
+      }
+    },
+    "ladder": [
+      {
+        "t": 0.002,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 42750,
+        "dport": 80,
+        "label": "SYN :42750",
+        "kind": "syn"
+      },
+      {
+        "t": 0.005,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 42750,
+        "dport": 80,
+        "label": "GET /login.php",
+        "kind": "request"
+      },
+      {
+        "t": 0.069,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 42750,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 5.074,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 42750,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 5.08,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 42750,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 11.098,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 49770,
+        "dport": 80,
+        "label": "SYN :49770",
+        "kind": "syn"
+      },
+      {
+        "t": 11.099,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 49770,
+        "dport": 80,
+        "label": "POST /login.php",
+        "kind": "request"
+      },
+      {
+        "t": 11.171,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 49770,
+        "label": "302 Found",
+        "kind": "response"
+      },
+      {
+        "t": 11.175,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 49770,
+        "dport": 80,
+        "label": "GET /index.php",
+        "kind": "request"
+      },
+      {
+        "t": 11.185,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 49770,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 16.186,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 49770,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 23.828,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57264,
+        "dport": 80,
+        "label": "SYN :57264",
+        "kind": "syn"
+      },
+      {
+        "t": 23.83,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57264,
+        "dport": 80,
+        "label": "GET /security.php",
+        "kind": "request"
+      },
+      {
+        "t": 23.858,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 57264,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 28.861,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57264,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 31.638,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57278,
+        "dport": 80,
+        "label": "SYN :57278",
+        "kind": "syn"
+      },
+      {
+        "t": 31.64,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57278,
+        "dport": 80,
+        "label": "POST /security.php",
+        "kind": "request"
+      },
+      {
+        "t": 31.652,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 57278,
+        "label": "302 Found",
+        "kind": "response"
+      },
+      {
+        "t": 31.657,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57278,
+        "dport": 80,
+        "label": "GET /security.php",
+        "kind": "request"
+      },
+      {
+        "t": 31.664,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 57278,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 36.675,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57278,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 40.275,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 52398,
+        "dport": 80,
+        "label": "SYN :52398",
+        "kind": "syn"
+      },
+      {
+        "t": 40.278,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 52398,
+        "dport": 80,
+        "label": "GET /",
+        "kind": "request"
+      },
+      {
+        "t": 40.301,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 52398,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 45.316,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 52398,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 48.937,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57310,
+        "dport": 80,
+        "label": "SYN :57310",
+        "kind": "syn"
+      },
+      {
+        "t": 48.939,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57310,
+        "dport": 80,
+        "label": "GET /instructions.php",
+        "kind": "request"
+      },
+      {
+        "t": 49.001,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 57310,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 49.053,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57310,
+        "dport": 80,
+        "label": "GET /docs/graphics/docker/overview.png",
+        "kind": "request"
+      },
+      {
+        "t": 49.053,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57316,
+        "dport": 80,
+        "label": "SYN :57316",
+        "kind": "syn"
+      },
+      {
+        "t": 49.054,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57316,
+        "dport": 80,
+        "label": "GET /docs/graphics/docker/detail.png",
+        "kind": "request"
+      },
+      {
+        "t": 49.066,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 57310,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 49.071,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 57316,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 54.077,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57310,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 54.078,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57316,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 72.951,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 46078,
+        "dport": 80,
+        "label": "SYN :46078",
+        "kind": "syn"
+      },
+      {
+        "t": 72.953,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 46078,
+        "dport": 80,
+        "label": "GET /vulnerabilities/sqli/",
+        "kind": "request"
+      },
+      {
+        "t": 72.984,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 46078,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 77.989,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 46078,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 94.035,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 56282,
+        "dport": 80,
+        "label": "SYN :56282",
+        "kind": "syn"
+      },
+      {
+        "t": 94.038,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 56282,
+        "dport": 80,
+        "label": "GET /vulnerabilities/weak_id/",
+        "kind": "request"
+      },
+      {
+        "t": 94.059,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 56282,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 99.07,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 56282,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 103.339,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 49422,
+        "dport": 80,
+        "label": "SYN :49422",
+        "kind": "syn"
+      },
+      {
+        "t": 103.34,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 49422,
+        "dport": 80,
+        "label": "GET /vulnerabilities/cryptography/",
+        "kind": "request"
+      },
+      {
+        "t": 103.367,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 49422,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 108.374,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 49422,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 110.05,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 49434,
+        "dport": 80,
+        "label": "SYN :49434",
+        "kind": "syn"
+      },
+      {
+        "t": 110.051,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 49434,
+        "dport": 80,
+        "label": "GET /vulnerabilities/xss_r/",
+        "kind": "request"
+      },
+      {
+        "t": 110.072,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 49434,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 115.079,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 49434,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 121.938,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 49934,
+        "dport": 80,
+        "label": "SYN :49934",
+        "kind": "syn"
+      },
+      {
+        "t": 121.94,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 49934,
+        "dport": 80,
+        "label": "GET /vulnerabilities/xss_r/?name=Zainab",
+        "kind": "request"
+      },
+      {
+        "t": 121.959,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 49934,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 126.964,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 49934,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 138.606,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57620,
+        "dport": 80,
+        "label": "SYN :57620",
+        "kind": "syn"
+      },
+      {
+        "t": 138.61,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57620,
+        "dport": 80,
+        "label": "GET /vulnerabilities/xss_s/",
+        "kind": "request"
+      },
+      {
+        "t": 138.647,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 57620,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 143.654,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 57620,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 154.029,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 51562,
+        "dport": 80,
+        "label": "SYN :51562",
+        "kind": "syn"
+      },
+      {
+        "t": 154.031,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 51562,
+        "dport": 80,
+        "label": "POST /vulnerabilities/xss_s/",
+        "kind": "request"
+      },
+      {
+        "t": 154.064,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 51562,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 159.075,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 51562,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 165.253,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 60588,
+        "dport": 80,
+        "label": "SYN :60588",
+        "kind": "syn"
+      },
+      {
+        "t": 165.256,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 60588,
+        "dport": 80,
+        "label": "GET /logout.php",
+        "kind": "request"
+      },
+      {
+        "t": 165.261,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 60588,
+        "label": "302 Found",
+        "kind": "response"
+      },
+      {
+        "t": 165.27,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 60588,
+        "dport": 80,
+        "label": "GET /login.php",
+        "kind": "request"
+      },
+      {
+        "t": 165.281,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 60588,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 170.288,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 60588,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 171.698,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 60590,
+        "dport": 80,
+        "label": "SYN :60590",
+        "kind": "syn"
+      },
+      {
+        "t": 171.699,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 60590,
+        "dport": 80,
+        "label": "POST /login.php",
+        "kind": "request"
+      },
+      {
+        "t": 171.715,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 60590,
+        "label": "302 Found",
+        "kind": "response"
+      },
+      {
+        "t": 171.733,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 60590,
+        "dport": 80,
+        "label": "GET /login.php",
+        "kind": "request"
+      },
+      {
+        "t": 171.74,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 60590,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 176.748,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 60590,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 184.633,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 41648,
+        "dport": 80,
+        "label": "SYN :41648",
+        "kind": "syn"
+      },
+      {
+        "t": 184.635,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 41648,
+        "dport": 80,
+        "label": "POST /login.php",
+        "kind": "request"
+      },
+      {
+        "t": 184.654,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 41648,
+        "label": "302 Found",
+        "kind": "response"
+      },
+      {
+        "t": 184.671,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 41648,
+        "dport": 80,
+        "label": "GET /index.php",
+        "kind": "request"
+      },
+      {
+        "t": 184.674,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 41648,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 189.677,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 41648,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 192.863,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 34250,
+        "dport": 80,
+        "label": "SYN :34250",
+        "kind": "syn"
+      },
+      {
+        "t": 192.865,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 34250,
+        "dport": 80,
+        "label": "GET /phpinfo.php",
+        "kind": "request"
+      },
+      {
+        "t": 192.917,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 34250,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 197.923,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 34250,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 199.872,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 34262,
+        "dport": 80,
+        "label": "SYN :34262",
+        "kind": "syn"
+      },
+      {
+        "t": 199.873,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 34262,
+        "dport": 80,
+        "label": "GET /about.php",
+        "kind": "request"
+      },
+      {
+        "t": 199.881,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 34262,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 204.89,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 34262,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 212.363,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 32818,
+        "dport": 80,
+        "label": "SYN :32818",
+        "kind": "syn"
+      },
+      {
+        "t": 212.366,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 32818,
+        "dport": 80,
+        "label": "GET /vulnerabilities/exec/",
+        "kind": "request"
+      },
+      {
+        "t": 212.395,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 32818,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 217.4,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 32818,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 227.995,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 40632,
+        "dport": 80,
+        "label": "SYN :40632",
+        "kind": "syn"
+      },
+      {
+        "t": 227.998,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 40632,
+        "dport": 80,
+        "label": "GET /",
+        "kind": "request"
+      },
+      {
+        "t": 228.009,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 40632,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 233.012,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 40632,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      },
+      {
+        "t": 260.971,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 42726,
+        "dport": 80,
+        "label": "SYN :42726",
+        "kind": "syn"
+      },
+      {
+        "t": 260.973,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 42726,
+        "dport": 80,
+        "label": "GET /vulnerabilities/xss_s/",
+        "kind": "request"
+      },
+      {
+        "t": 260.994,
+        "src": "192.168.128.20",
+        "dst": "192.168.128.5",
+        "sport": 80,
+        "dport": 42726,
+        "label": "200 OK",
+        "kind": "response"
+      },
+      {
+        "t": 266.011,
+        "src": "192.168.128.5",
+        "dst": "192.168.128.20",
+        "sport": 42726,
+        "dport": 80,
+        "label": "FIN",
+        "kind": "fin"
+      }
+    ],
+    "ladder_chart": {
+      "client": "192.168.128.5",
+      "server": "192.168.128.20",
+      "rows": [
+        {
+          "y": 40,
+          "t": 0.002,
+          "label": "SYN :42750",
+          "kind": "syn",
+          "to_server": true,
+          "port": 42750
+        },
+        {
+          "y": 60,
+          "t": 0.005,
+          "label": "GET /login.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 42750
+        },
+        {
+          "y": 80,
+          "t": 0.069,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 42750
+        },
+        {
+          "y": 100,
+          "t": 11.098,
+          "label": "SYN :49770",
+          "kind": "syn",
+          "to_server": true,
+          "port": 49770
+        },
+        {
+          "y": 120,
+          "t": 11.099,
+          "label": "POST /login.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 49770
+        },
+        {
+          "y": 140,
+          "t": 11.171,
+          "label": "302 Found",
+          "kind": "response",
+          "to_server": false,
+          "port": 49770
+        },
+        {
+          "y": 160,
+          "t": 11.175,
+          "label": "GET /index.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 49770
+        },
+        {
+          "y": 180,
+          "t": 11.185,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 49770
+        },
+        {
+          "y": 200,
+          "t": 23.828,
+          "label": "SYN :57264",
+          "kind": "syn",
+          "to_server": true,
+          "port": 57264
+        },
+        {
+          "y": 220,
+          "t": 23.83,
+          "label": "GET /security.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 57264
+        },
+        {
+          "y": 240,
+          "t": 23.858,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 57264
+        },
+        {
+          "y": 260,
+          "t": 31.638,
+          "label": "SYN :57278",
+          "kind": "syn",
+          "to_server": true,
+          "port": 57278
+        },
+        {
+          "y": 280,
+          "t": 31.64,
+          "label": "POST /security.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 57278
+        },
+        {
+          "y": 300,
+          "t": 31.652,
+          "label": "302 Found",
+          "kind": "response",
+          "to_server": false,
+          "port": 57278
+        },
+        {
+          "y": 320,
+          "t": 31.657,
+          "label": "GET /security.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 57278
+        },
+        {
+          "y": 340,
+          "t": 31.664,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 57278
+        },
+        {
+          "y": 360,
+          "t": 40.275,
+          "label": "SYN :52398",
+          "kind": "syn",
+          "to_server": true,
+          "port": 52398
+        },
+        {
+          "y": 380,
+          "t": 40.278,
+          "label": "GET /",
+          "kind": "request",
+          "to_server": true,
+          "port": 52398
+        },
+        {
+          "y": 400,
+          "t": 40.301,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 52398
+        },
+        {
+          "y": 420,
+          "t": 48.937,
+          "label": "SYN :57310",
+          "kind": "syn",
+          "to_server": true,
+          "port": 57310
+        },
+        {
+          "y": 440,
+          "t": 48.939,
+          "label": "GET /instructions.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 57310
+        },
+        {
+          "y": 460,
+          "t": 49.001,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 57310
+        },
+        {
+          "y": 480,
+          "t": 49.053,
+          "label": "GET /docs/graphics/docker/overview.png",
+          "kind": "request",
+          "to_server": true,
+          "port": 57310
+        },
+        {
+          "y": 500,
+          "t": 49.053,
+          "label": "SYN :57316",
+          "kind": "syn",
+          "to_server": true,
+          "port": 57316
+        },
+        {
+          "y": 520,
+          "t": 49.054,
+          "label": "GET /docs/graphics/docker/detail.png",
+          "kind": "request",
+          "to_server": true,
+          "port": 57316
+        },
+        {
+          "y": 540,
+          "t": 49.066,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 57310
+        },
+        {
+          "y": 560,
+          "t": 49.071,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 57316
+        },
+        {
+          "y": 580,
+          "t": 72.951,
+          "label": "SYN :46078",
+          "kind": "syn",
+          "to_server": true,
+          "port": 46078
+        },
+        {
+          "y": 600,
+          "t": 72.953,
+          "label": "GET /vulnerabilities/sqli/",
+          "kind": "request",
+          "to_server": true,
+          "port": 46078
+        },
+        {
+          "y": 620,
+          "t": 72.984,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 46078
+        },
+        {
+          "y": 640,
+          "t": 94.035,
+          "label": "SYN :56282",
+          "kind": "syn",
+          "to_server": true,
+          "port": 56282
+        },
+        {
+          "y": 660,
+          "t": 94.038,
+          "label": "GET /vulnerabilities/weak_id/",
+          "kind": "request",
+          "to_server": true,
+          "port": 56282
+        },
+        {
+          "y": 680,
+          "t": 94.059,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 56282
+        },
+        {
+          "y": 700,
+          "t": 103.339,
+          "label": "SYN :49422",
+          "kind": "syn",
+          "to_server": true,
+          "port": 49422
+        },
+        {
+          "y": 720,
+          "t": 103.34,
+          "label": "GET /vulnerabilities/cryptography/",
+          "kind": "request",
+          "to_server": true,
+          "port": 49422
+        },
+        {
+          "y": 740,
+          "t": 103.367,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 49422
+        },
+        {
+          "y": 760,
+          "t": 110.05,
+          "label": "SYN :49434",
+          "kind": "syn",
+          "to_server": true,
+          "port": 49434
+        },
+        {
+          "y": 780,
+          "t": 110.051,
+          "label": "GET /vulnerabilities/xss_r/",
+          "kind": "request",
+          "to_server": true,
+          "port": 49434
+        },
+        {
+          "y": 800,
+          "t": 110.072,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 49434
+        },
+        {
+          "y": 820,
+          "t": 121.938,
+          "label": "SYN :49934",
+          "kind": "syn",
+          "to_server": true,
+          "port": 49934
+        },
+        {
+          "y": 840,
+          "t": 121.94,
+          "label": "GET /vulnerabilities/xss_r/?name=Zainab",
+          "kind": "request",
+          "to_server": true,
+          "port": 49934
+        },
+        {
+          "y": 860,
+          "t": 121.959,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 49934
+        },
+        {
+          "y": 880,
+          "t": 138.606,
+          "label": "SYN :57620",
+          "kind": "syn",
+          "to_server": true,
+          "port": 57620
+        },
+        {
+          "y": 900,
+          "t": 138.61,
+          "label": "GET /vulnerabilities/xss_s/",
+          "kind": "request",
+          "to_server": true,
+          "port": 57620
+        },
+        {
+          "y": 920,
+          "t": 138.647,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 57620
+        },
+        {
+          "y": 940,
+          "t": 154.029,
+          "label": "SYN :51562",
+          "kind": "syn",
+          "to_server": true,
+          "port": 51562
+        },
+        {
+          "y": 960,
+          "t": 154.031,
+          "label": "POST /vulnerabilities/xss_s/",
+          "kind": "request",
+          "to_server": true,
+          "port": 51562
+        },
+        {
+          "y": 980,
+          "t": 154.064,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 51562
+        },
+        {
+          "y": 1000,
+          "t": 165.253,
+          "label": "SYN :60588",
+          "kind": "syn",
+          "to_server": true,
+          "port": 60588
+        },
+        {
+          "y": 1020,
+          "t": 165.256,
+          "label": "GET /logout.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 60588
+        },
+        {
+          "y": 1040,
+          "t": 165.261,
+          "label": "302 Found",
+          "kind": "response",
+          "to_server": false,
+          "port": 60588
+        },
+        {
+          "y": 1060,
+          "t": 165.27,
+          "label": "GET /login.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 60588
+        },
+        {
+          "y": 1080,
+          "t": 165.281,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 60588
+        },
+        {
+          "y": 1100,
+          "t": 171.698,
+          "label": "SYN :60590",
+          "kind": "syn",
+          "to_server": true,
+          "port": 60590
+        },
+        {
+          "y": 1120,
+          "t": 171.699,
+          "label": "POST /login.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 60590
+        },
+        {
+          "y": 1140,
+          "t": 171.715,
+          "label": "302 Found",
+          "kind": "response",
+          "to_server": false,
+          "port": 60590
+        },
+        {
+          "y": 1160,
+          "t": 171.733,
+          "label": "GET /login.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 60590
+        },
+        {
+          "y": 1180,
+          "t": 171.74,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 60590
+        },
+        {
+          "y": 1200,
+          "t": 184.633,
+          "label": "SYN :41648",
+          "kind": "syn",
+          "to_server": true,
+          "port": 41648
+        },
+        {
+          "y": 1220,
+          "t": 184.635,
+          "label": "POST /login.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 41648
+        },
+        {
+          "y": 1240,
+          "t": 184.654,
+          "label": "302 Found",
+          "kind": "response",
+          "to_server": false,
+          "port": 41648
+        },
+        {
+          "y": 1260,
+          "t": 184.671,
+          "label": "GET /index.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 41648
+        },
+        {
+          "y": 1280,
+          "t": 184.674,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 41648
+        },
+        {
+          "y": 1300,
+          "t": 192.863,
+          "label": "SYN :34250",
+          "kind": "syn",
+          "to_server": true,
+          "port": 34250
+        },
+        {
+          "y": 1320,
+          "t": 192.865,
+          "label": "GET /phpinfo.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 34250
+        },
+        {
+          "y": 1340,
+          "t": 192.917,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 34250
+        },
+        {
+          "y": 1360,
+          "t": 199.872,
+          "label": "SYN :34262",
+          "kind": "syn",
+          "to_server": true,
+          "port": 34262
+        },
+        {
+          "y": 1380,
+          "t": 199.873,
+          "label": "GET /about.php",
+          "kind": "request",
+          "to_server": true,
+          "port": 34262
+        },
+        {
+          "y": 1400,
+          "t": 199.881,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 34262
+        },
+        {
+          "y": 1420,
+          "t": 212.363,
+          "label": "SYN :32818",
+          "kind": "syn",
+          "to_server": true,
+          "port": 32818
+        },
+        {
+          "y": 1440,
+          "t": 212.366,
+          "label": "GET /vulnerabilities/exec/",
+          "kind": "request",
+          "to_server": true,
+          "port": 32818
+        },
+        {
+          "y": 1460,
+          "t": 212.395,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 32818
+        },
+        {
+          "y": 1480,
+          "t": 227.995,
+          "label": "SYN :40632",
+          "kind": "syn",
+          "to_server": true,
+          "port": 40632
+        },
+        {
+          "y": 1500,
+          "t": 227.998,
+          "label": "GET /",
+          "kind": "request",
+          "to_server": true,
+          "port": 40632
+        },
+        {
+          "y": 1520,
+          "t": 228.009,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 40632
+        },
+        {
+          "y": 1540,
+          "t": 260.971,
+          "label": "SYN :42726",
+          "kind": "syn",
+          "to_server": true,
+          "port": 42726
+        },
+        {
+          "y": 1560,
+          "t": 260.973,
+          "label": "GET /vulnerabilities/xss_s/",
+          "kind": "request",
+          "to_server": true,
+          "port": 42726
+        },
+        {
+          "y": 1580,
+          "t": 260.994,
+          "label": "200 OK",
+          "kind": "response",
+          "to_server": false,
+          "port": 42726
+        }
+      ],
+      "height": 1610
+    },
+    "endpoints": [
+      {
+        "address": "192.168.128.5",
+        "packets": 294,
+        "bytes": 352421,
+        "pkts_tx": 157,
+        "pkts_rx": 137,
+        "bytes_tx": 24318,
+        "bytes_rx": 328103,
+        "share_pct": 6.9,
+        "peers": 1
+      },
+      {
+        "address": "192.168.128.20",
+        "packets": 294,
+        "bytes": 352421,
+        "pkts_tx": 137,
+        "pkts_rx": 157,
+        "bytes_tx": 328103,
+        "bytes_rx": 24318,
+        "share_pct": 93.0,
+        "peers": 1
+      },
+      {
+        "address": "fe80::3c06:30ff:fe63:f665",
+        "packets": 4,
+        "bytes": 472,
+        "pkts_tx": 4,
+        "pkts_rx": 0,
+        "bytes_tx": 472,
+        "bytes_rx": 0,
+        "share_pct": 0.1,
+        "peers": 1
+      },
+      {
+        "address": "ff02::1",
+        "packets": 4,
+        "bytes": 472,
+        "pkts_tx": 0,
+        "pkts_rx": 4,
+        "bytes_tx": 0,
+        "bytes_rx": 472,
+        "share_pct": 0.0,
+        "peers": 1
+      }
+    ],
+    "protocol_hierarchy": [
+      {
+        "stack": "Ethernet/IPv4/TCP",
+        "frames": 212,
+        "bytes": 14344,
+        "pct_frames": 71.1
+      },
+      {
+        "stack": "Ethernet/IPv4/TCP/HTTP",
+        "frames": 78,
+        "bytes": 337909,
+        "pct_frames": 26.2
+      },
+      {
+        "stack": "Ethernet/ARP",
+        "frames": 4,
+        "bytes": 168,
+        "pct_frames": 1.3
+      },
+      {
+        "stack": "Ethernet/IPv6/ICMPv6",
+        "frames": 4,
+        "bytes": 472,
+        "pct_frames": 1.3
+      }
+    ],
+    "io": {
+      "bin_s": 3,
+      "bins": [
+        {
+          "t": 0,
+          "packets": 9,
+          "bytes": 1998,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 5328.0
+        },
+        {
+          "t": 3,
+          "packets": 5,
+          "bytes": 382,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 1018.7
+        },
+        {
+          "t": 6,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 9,
+          "packets": 11,
+          "bytes": 5159,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 13757.3
+        },
+        {
+          "t": 12,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 15,
+          "packets": 3,
+          "bytes": 198,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 528.0
+        },
+        {
+          "t": 18,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 21,
+          "packets": 7,
+          "bytes": 3209,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 8557.3
+        },
+        {
+          "t": 24,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 27,
+          "packets": 4,
+          "bytes": 264,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 704.0
+        },
+        {
+          "t": 30,
+          "packets": 10,
+          "bytes": 4578,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 12208.0
+        },
+        {
+          "t": 33,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 36,
+          "packets": 3,
+          "bytes": 198,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 528.0
+        },
+        {
+          "t": 39,
+          "packets": 7,
+          "bytes": 3743,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 9981.3
+        },
+        {
+          "t": 42,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 45,
+          "packets": 3,
+          "bytes": 198,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 528.0
+        },
+        {
+          "t": 48,
+          "packets": 57,
+          "bytes": 258014,
+          "open_conns": 2,
+          "new_conns": 2,
+          "throughput_bps": 688037.3
+        },
+        {
+          "t": 51,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 2,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 54,
+          "packets": 6,
+          "bytes": 396,
+          "open_conns": 2,
+          "new_conns": 0,
+          "throughput_bps": 1056.0
+        },
+        {
+          "t": 57,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 60,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 63,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 66,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 69,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 72,
+          "packets": 7,
+          "bytes": 2760,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 7360.0
+        },
+        {
+          "t": 75,
+          "packets": 4,
+          "bytes": 264,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 704.0
+        },
+        {
+          "t": 78,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 81,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 84,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 87,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 90,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 93,
+          "packets": 7,
+          "bytes": 2594,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 6917.3
+        },
+        {
+          "t": 96,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 99,
+          "packets": 3,
+          "bytes": 198,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 528.0
+        },
+        {
+          "t": 102,
+          "packets": 7,
+          "bytes": 3524,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 9397.3
+        },
+        {
+          "t": 105,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 108,
+          "packets": 10,
+          "bytes": 3024,
+          "open_conns": 2,
+          "new_conns": 1,
+          "throughput_bps": 8064.0
+        },
+        {
+          "t": 111,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 114,
+          "packets": 4,
+          "bytes": 264,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 704.0
+        },
+        {
+          "t": 117,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 120,
+          "packets": 7,
+          "bytes": 2846,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 7589.3
+        },
+        {
+          "t": 123,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 126,
+          "packets": 3,
+          "bytes": 198,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 528.0
+        },
+        {
+          "t": 129,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 132,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 135,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 138,
+          "packets": 7,
+          "bytes": 3045,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 8120.0
+        },
+        {
+          "t": 141,
+          "packets": 3,
+          "bytes": 198,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 528.0
+        },
+        {
+          "t": 144,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 147,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 150,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 153,
+          "packets": 7,
+          "bytes": 3218,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 8581.3
+        },
+        {
+          "t": 156,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 159,
+          "packets": 3,
+          "bytes": 198,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 528.0
+        },
+        {
+          "t": 162,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 165,
+          "packets": 11,
+          "bytes": 3091,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 8242.7
+        },
+        {
+          "t": 168,
+          "packets": 3,
+          "bytes": 198,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 528.0
+        },
+        {
+          "t": 171,
+          "packets": 10,
+          "bytes": 3244,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 8650.7
+        },
+        {
+          "t": 174,
+          "packets": 3,
+          "bytes": 198,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 528.0
+        },
+        {
+          "t": 177,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 180,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 183,
+          "packets": 10,
+          "bytes": 5093,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 13581.3
+        },
+        {
+          "t": 186,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 189,
+          "packets": 3,
+          "bytes": 198,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 528.0
+        },
+        {
+          "t": 192,
+          "packets": 13,
+          "bytes": 26076,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 69536.0
+        },
+        {
+          "t": 195,
+          "packets": 3,
+          "bytes": 198,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 528.0
+        },
+        {
+          "t": 198,
+          "packets": 7,
+          "bytes": 3240,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 8640.0
+        },
+        {
+          "t": 201,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 204,
+          "packets": 4,
+          "bytes": 264,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 704.0
+        },
+        {
+          "t": 207,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 210,
+          "packets": 7,
+          "bytes": 2783,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 7421.3
+        },
+        {
+          "t": 213,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 216,
+          "packets": 3,
+          "bytes": 198,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 528.0
+        },
+        {
+          "t": 219,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 222,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 225,
+          "packets": 5,
+          "bytes": 800,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 2133.3
+        },
+        {
+          "t": 228,
+          "packets": 2,
+          "bytes": 2952,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 7872.0
+        },
+        {
+          "t": 231,
+          "packets": 3,
+          "bytes": 198,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 528.0
+        },
+        {
+          "t": 234,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 237,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 240,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 243,
+          "packets": 1,
+          "bytes": 118,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 314.7
+        },
+        {
+          "t": 246,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 249,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 252,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 255,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 0,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 258,
+          "packets": 7,
+          "bytes": 3028,
+          "open_conns": 1,
+          "new_conns": 1,
+          "throughput_bps": 8074.7
+        },
+        {
+          "t": 261,
+          "packets": 0,
+          "bytes": 0,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 0.0
+        },
+        {
+          "t": 264,
+          "packets": 6,
+          "bytes": 348,
+          "open_conns": 1,
+          "new_conns": 0,
+          "throughput_bps": 928.0
+        }
+      ]
+    },
+    "chart": {
+      "width": 860,
+      "io": [
+        {
+          "x": 0.0,
+          "w": 8.66,
+          "h": 0.85,
+          "t": 0,
+          "bytes": 1998,
+          "packets": 9,
+          "open": 1
+        },
+        {
+          "x": 9.66,
+          "w": 8.66,
+          "h": 0.16,
+          "t": 3,
+          "bytes": 382,
+          "packets": 5,
+          "open": 1
+        },
+        {
+          "x": 19.33,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 6,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 28.99,
+          "w": 8.66,
+          "h": 2.2,
+          "t": 9,
+          "bytes": 5159,
+          "packets": 11,
+          "open": 1
+        },
+        {
+          "x": 38.65,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 12,
+          "bytes": 0,
+          "packets": 0,
+          "open": 1
+        },
+        {
+          "x": 48.31,
+          "w": 8.66,
+          "h": 0.08,
+          "t": 15,
+          "bytes": 198,
+          "packets": 3,
+          "open": 1
+        },
+        {
+          "x": 57.98,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 18,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 67.64,
+          "w": 8.66,
+          "h": 1.37,
+          "t": 21,
+          "bytes": 3209,
+          "packets": 7,
+          "open": 1
+        },
+        {
+          "x": 77.3,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 24,
+          "bytes": 0,
+          "packets": 0,
+          "open": 1
+        },
+        {
+          "x": 86.97,
+          "w": 8.66,
+          "h": 0.11,
+          "t": 27,
+          "bytes": 264,
+          "packets": 4,
+          "open": 1
+        },
+        {
+          "x": 96.63,
+          "w": 8.66,
+          "h": 1.95,
+          "t": 30,
+          "bytes": 4578,
+          "packets": 10,
+          "open": 1
+        },
+        {
+          "x": 106.29,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 33,
+          "bytes": 0,
+          "packets": 0,
+          "open": 1
+        },
+        {
+          "x": 115.96,
+          "w": 8.66,
+          "h": 0.08,
+          "t": 36,
+          "bytes": 198,
+          "packets": 3,
+          "open": 1
+        },
+        {
+          "x": 125.62,
+          "w": 8.66,
+          "h": 1.6,
+          "t": 39,
+          "bytes": 3743,
+          "packets": 7,
+          "open": 1
+        },
+        {
+          "x": 135.28,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 42,
+          "bytes": 0,
+          "packets": 0,
+          "open": 1
+        },
+        {
+          "x": 144.94,
+          "w": 8.66,
+          "h": 0.08,
+          "t": 45,
+          "bytes": 198,
+          "packets": 3,
+          "open": 1
+        },
+        {
+          "x": 154.61,
+          "w": 8.66,
+          "h": 110.0,
+          "t": 48,
+          "bytes": 258014,
+          "packets": 57,
+          "open": 2
+        },
+        {
+          "x": 164.27,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 51,
+          "bytes": 0,
+          "packets": 0,
+          "open": 2
+        },
+        {
+          "x": 173.93,
+          "w": 8.66,
+          "h": 0.17,
+          "t": 54,
+          "bytes": 396,
+          "packets": 6,
+          "open": 2
+        },
+        {
+          "x": 183.6,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 57,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 193.26,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 60,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 202.92,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 63,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 212.58,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 66,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 222.25,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 69,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 231.91,
+          "w": 8.66,
+          "h": 1.18,
+          "t": 72,
+          "bytes": 2760,
+          "packets": 7,
+          "open": 1
+        },
+        {
+          "x": 241.57,
+          "w": 8.66,
+          "h": 0.11,
+          "t": 75,
+          "bytes": 264,
+          "packets": 4,
+          "open": 1
+        },
+        {
+          "x": 251.24,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 78,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 260.9,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 81,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 270.56,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 84,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 280.22,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 87,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 289.89,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 90,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 299.55,
+          "w": 8.66,
+          "h": 1.11,
+          "t": 93,
+          "bytes": 2594,
+          "packets": 7,
+          "open": 1
+        },
+        {
+          "x": 309.21,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 96,
+          "bytes": 0,
+          "packets": 0,
+          "open": 1
+        },
+        {
+          "x": 318.88,
+          "w": 8.66,
+          "h": 0.08,
+          "t": 99,
+          "bytes": 198,
+          "packets": 3,
+          "open": 1
+        },
+        {
+          "x": 328.54,
+          "w": 8.66,
+          "h": 1.5,
+          "t": 102,
+          "bytes": 3524,
+          "packets": 7,
+          "open": 1
+        },
+        {
+          "x": 338.2,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 105,
+          "bytes": 0,
+          "packets": 0,
+          "open": 1
+        },
+        {
+          "x": 347.87,
+          "w": 8.66,
+          "h": 1.29,
+          "t": 108,
+          "bytes": 3024,
+          "packets": 10,
+          "open": 2
+        },
+        {
+          "x": 357.53,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 111,
+          "bytes": 0,
+          "packets": 0,
+          "open": 1
+        },
+        {
+          "x": 367.19,
+          "w": 8.66,
+          "h": 0.11,
+          "t": 114,
+          "bytes": 264,
+          "packets": 4,
+          "open": 1
+        },
+        {
+          "x": 376.85,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 117,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 386.52,
+          "w": 8.66,
+          "h": 1.21,
+          "t": 120,
+          "bytes": 2846,
+          "packets": 7,
+          "open": 1
+        },
+        {
+          "x": 396.18,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 123,
+          "bytes": 0,
+          "packets": 0,
+          "open": 1
+        },
+        {
+          "x": 405.84,
+          "w": 8.66,
+          "h": 0.08,
+          "t": 126,
+          "bytes": 198,
+          "packets": 3,
+          "open": 1
+        },
+        {
+          "x": 415.51,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 129,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 425.17,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 132,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 434.83,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 135,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 444.49,
+          "w": 8.66,
+          "h": 1.3,
+          "t": 138,
+          "bytes": 3045,
+          "packets": 7,
+          "open": 1
+        },
+        {
+          "x": 454.16,
+          "w": 8.66,
+          "h": 0.08,
+          "t": 141,
+          "bytes": 198,
+          "packets": 3,
+          "open": 1
+        },
+        {
+          "x": 463.82,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 144,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 473.48,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 147,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 483.15,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 150,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 492.81,
+          "w": 8.66,
+          "h": 1.37,
+          "t": 153,
+          "bytes": 3218,
+          "packets": 7,
+          "open": 1
+        },
+        {
+          "x": 502.47,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 156,
+          "bytes": 0,
+          "packets": 0,
+          "open": 1
+        },
+        {
+          "x": 512.13,
+          "w": 8.66,
+          "h": 0.08,
+          "t": 159,
+          "bytes": 198,
+          "packets": 3,
+          "open": 1
+        },
+        {
+          "x": 521.8,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 162,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 531.46,
+          "w": 8.66,
+          "h": 1.32,
+          "t": 165,
+          "bytes": 3091,
+          "packets": 11,
+          "open": 1
+        },
+        {
+          "x": 541.12,
+          "w": 8.66,
+          "h": 0.08,
+          "t": 168,
+          "bytes": 198,
+          "packets": 3,
+          "open": 1
+        },
+        {
+          "x": 550.79,
+          "w": 8.66,
+          "h": 1.38,
+          "t": 171,
+          "bytes": 3244,
+          "packets": 10,
+          "open": 1
+        },
+        {
+          "x": 560.45,
+          "w": 8.66,
+          "h": 0.08,
+          "t": 174,
+          "bytes": 198,
+          "packets": 3,
+          "open": 1
+        },
+        {
+          "x": 570.11,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 177,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 579.78,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 180,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 589.44,
+          "w": 8.66,
+          "h": 2.17,
+          "t": 183,
+          "bytes": 5093,
+          "packets": 10,
+          "open": 1
+        },
+        {
+          "x": 599.1,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 186,
+          "bytes": 0,
+          "packets": 0,
+          "open": 1
+        },
+        {
+          "x": 608.76,
+          "w": 8.66,
+          "h": 0.08,
+          "t": 189,
+          "bytes": 198,
+          "packets": 3,
+          "open": 1
+        },
+        {
+          "x": 618.43,
+          "w": 8.66,
+          "h": 11.12,
+          "t": 192,
+          "bytes": 26076,
+          "packets": 13,
+          "open": 1
+        },
+        {
+          "x": 628.09,
+          "w": 8.66,
+          "h": 0.08,
+          "t": 195,
+          "bytes": 198,
+          "packets": 3,
+          "open": 1
+        },
+        {
+          "x": 637.75,
+          "w": 8.66,
+          "h": 1.38,
+          "t": 198,
+          "bytes": 3240,
+          "packets": 7,
+          "open": 1
+        },
+        {
+          "x": 647.42,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 201,
+          "bytes": 0,
+          "packets": 0,
+          "open": 1
+        },
+        {
+          "x": 657.08,
+          "w": 8.66,
+          "h": 0.11,
+          "t": 204,
+          "bytes": 264,
+          "packets": 4,
+          "open": 1
+        },
+        {
+          "x": 666.74,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 207,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 676.4,
+          "w": 8.66,
+          "h": 1.19,
+          "t": 210,
+          "bytes": 2783,
+          "packets": 7,
+          "open": 1
+        },
+        {
+          "x": 686.07,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 213,
+          "bytes": 0,
+          "packets": 0,
+          "open": 1
+        },
+        {
+          "x": 695.73,
+          "w": 8.66,
+          "h": 0.08,
+          "t": 216,
+          "bytes": 198,
+          "packets": 3,
+          "open": 1
+        },
+        {
+          "x": 705.39,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 219,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 715.06,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 222,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 724.72,
+          "w": 8.66,
+          "h": 0.34,
+          "t": 225,
+          "bytes": 800,
+          "packets": 5,
+          "open": 1
+        },
+        {
+          "x": 734.38,
+          "w": 8.66,
+          "h": 1.26,
+          "t": 228,
+          "bytes": 2952,
+          "packets": 2,
+          "open": 1
+        },
+        {
+          "x": 744.04,
+          "w": 8.66,
+          "h": 0.08,
+          "t": 231,
+          "bytes": 198,
+          "packets": 3,
+          "open": 1
+        },
+        {
+          "x": 753.71,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 234,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 763.37,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 237,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 773.03,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 240,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 782.7,
+          "w": 8.66,
+          "h": 0.05,
+          "t": 243,
+          "bytes": 118,
+          "packets": 1,
+          "open": 0
+        },
+        {
+          "x": 792.36,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 246,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 802.02,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 249,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 811.69,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 252,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 821.35,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 255,
+          "bytes": 0,
+          "packets": 0,
+          "open": 0
+        },
+        {
+          "x": 831.01,
+          "w": 8.66,
+          "h": 1.29,
+          "t": 258,
+          "bytes": 3028,
+          "packets": 7,
+          "open": 1
+        },
+        {
+          "x": 840.67,
+          "w": 8.66,
+          "h": 0.0,
+          "t": 261,
+          "bytes": 0,
+          "packets": 0,
+          "open": 1
+        },
+        {
+          "x": 850.34,
+          "w": 8.66,
+          "h": 0.15,
+          "t": 264,
+          "bytes": 348,
+          "packets": 6,
+          "open": 1
+        }
+      ],
+      "io_peak_bytes": 258014,
+      "lanes": [
+        {
+          "y": 0,
+          "x": 0.01,
+          "w": 16.41,
+          "label": "42750\u219280",
+          "close": "FIN",
+          "flow_id": 1,
+          "reqs": [
+            "GET /login.php"
+          ]
+        },
+        {
+          "y": 18,
+          "x": 35.87,
+          "w": 16.45,
+          "label": "49770\u219280",
+          "close": "FIN",
+          "flow_id": 2,
+          "reqs": [
+            "POST /login.php",
+            "GET /index.php"
+          ]
+        },
+        {
+          "y": 36,
+          "x": 77.01,
+          "w": 16.29,
+          "label": "57264\u219280",
+          "close": "FIN",
+          "flow_id": 3,
+          "reqs": [
+            "GET /security.php"
+          ]
+        },
+        {
+          "y": 54,
+          "x": 102.25,
+          "w": 16.29,
+          "label": "57278\u219280",
+          "close": "FIN",
+          "flow_id": 4,
+          "reqs": [
+            "POST /security.php",
+            "GET /security.php"
+          ]
+        },
+        {
+          "y": 72,
+          "x": 130.16,
+          "w": 16.29,
+          "label": "52398\u219280",
+          "close": "FIN",
+          "flow_id": 5,
+          "reqs": [
+            "GET /"
+          ]
+        },
+        {
+          "y": 90,
+          "x": 158.15,
+          "w": 16.61,
+          "label": "57310\u219280",
+          "close": "FIN",
+          "flow_id": 6,
+          "reqs": [
+            "GET /instructions.php",
+            "GET /docs/graphics/docker/overview.png"
+          ]
+        },
+        {
+          "y": 108,
+          "x": 158.53,
+          "w": 16.24,
+          "label": "57316\u219280",
+          "close": "FIN",
+          "flow_id": 7,
+          "reqs": [
+            "GET /docs/graphics/docker/detail.png"
+          ]
+        },
+        {
+          "y": 126,
+          "x": 235.76,
+          "w": 16.29,
+          "label": "46078\u219280",
+          "close": "FIN",
+          "flow_id": 8,
+          "reqs": [
+            "GET /vulnerabilities/sqli/"
+          ]
+        },
+        {
+          "y": 144,
+          "x": 303.9,
+          "w": 16.28,
+          "label": "56282\u219280",
+          "close": "FIN",
+          "flow_id": 9,
+          "reqs": [
+            "GET /vulnerabilities/weak_id/"
+          ]
+        },
+        {
+          "y": 162,
+          "x": 333.97,
+          "w": 16.28,
+          "label": "49422\u219280",
+          "close": "FIN",
+          "flow_id": 10,
+          "reqs": [
+            "GET /vulnerabilities/cryptography/"
+          ]
+        },
+        {
+          "y": 180,
+          "x": 355.66,
+          "w": 16.26,
+          "label": "49434\u219280",
+          "close": "FIN",
+          "flow_id": 11,
+          "reqs": [
+            "GET /vulnerabilities/xss_r/"
+          ]
+        },
+        {
+          "y": 198,
+          "x": 394.08,
+          "w": 16.26,
+          "label": "49934\u219280",
+          "close": "FIN",
+          "flow_id": 12,
+          "reqs": [
+            "GET /vulnerabilities/xss_r/?name=Zainab"
+          ]
+        },
+        {
+          "y": 216,
+          "x": 447.94,
+          "w": 16.32,
+          "label": "57620\u219280",
+          "close": "FIN",
+          "flow_id": 13,
+          "reqs": [
+            "GET /vulnerabilities/xss_s/"
+          ]
+        },
+        {
+          "y": 234,
+          "x": 497.79,
+          "w": 16.31,
+          "label": "51562\u219280",
+          "close": "FIN",
+          "flow_id": 14,
+          "reqs": [
+            "POST /vulnerabilities/xss_s/"
+          ]
+        },
+        {
+          "y": 252,
+          "x": 534.06,
+          "w": 16.27,
+          "label": "60588\u219280",
+          "close": "FIN",
+          "flow_id": 15,
+          "reqs": [
+            "GET /logout.php",
+            "GET /login.php"
+          ]
+        },
+        {
+          "y": 270,
+          "x": 554.89,
+          "w": 16.32,
+          "label": "60590\u219280",
+          "close": "FIN",
+          "flow_id": 16,
+          "reqs": [
+            "POST /login.php",
+            "GET /login.php"
+          ]
+        },
+        {
+          "y": 288,
+          "x": 596.69,
+          "w": 16.3,
+          "label": "41648\u219280",
+          "close": "FIN",
+          "flow_id": 17,
+          "reqs": [
+            "POST /login.php",
+            "GET /index.php"
+          ]
+        },
+        {
+          "y": 306,
+          "x": 623.29,
+          "w": 16.35,
+          "label": "34250\u219280",
+          "close": "FIN",
+          "flow_id": 18,
+          "reqs": [
+            "GET /phpinfo.php"
+          ]
+        },
+        {
+          "y": 324,
+          "x": 645.94,
+          "w": 16.23,
+          "label": "34262\u219280",
+          "close": "FIN",
+          "flow_id": 19,
+          "reqs": [
+            "GET /about.php"
+          ]
+        },
+        {
+          "y": 342,
+          "x": 686.31,
+          "w": 16.3,
+          "label": "32818\u219280",
+          "close": "FIN",
+          "flow_id": 20,
+          "reqs": [
+            "GET /vulnerabilities/exec/"
+          ]
+        },
+        {
+          "y": 360,
+          "x": 736.83,
+          "w": 16.22,
+          "label": "40632\u219280",
+          "close": "FIN",
+          "flow_id": 21,
+          "reqs": [
+            "GET /"
+          ]
+        },
+        {
+          "y": 378,
+          "x": 843.4,
+          "w": 16.29,
+          "label": "42726\u219280",
+          "close": "FIN",
+          "flow_id": 22,
+          "reqs": [
+            "GET /vulnerabilities/xss_s/"
+          ]
+        }
+      ],
+      "lanes_height": 396,
+      "ticks": [
+        {
+          "x": 0.0,
+          "t": 0
+        },
+        {
+          "x": 96.95,
+          "t": 30
+        },
+        {
+          "x": 193.91,
+          "t": 60
+        },
+        {
+          "x": 290.86,
+          "t": 90
+        },
+        {
+          "x": 387.81,
+          "t": 120
+        },
+        {
+          "x": 484.77,
+          "t": 150
+        },
+        {
+          "x": 581.72,
+          "t": 180
+        },
+        {
+          "x": 678.67,
+          "t": 210
+        },
+        {
+          "x": 775.63,
+          "t": 240
+        }
+      ]
+    }
+  },
   "_hosts": [
     [
       "192.168.128.5",

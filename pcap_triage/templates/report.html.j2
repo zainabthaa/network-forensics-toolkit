@@ -2,177 +2,475 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>PCAP Triage Report — {{ meta.pcap_file }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case file: {{ meta.pcap_file }}</title>
 <style>
   :root{
-    --bg:#0f1420; --panel:#171e2e; --line:#28324a; --ink:#e7ecf5; --muted:#9aa6bd;
-    --accent:#4f8cff; --crit:#ff5470; --high:#ff9f43; --med:#ffd166; --low:#2dd4a7;
+    --paper:#F5F7F2;      /* chalk-sage page */
+    --sheet:#FFFFFF;
+    --rail:#E6ECE1;       /* sidebar */
+    --rule:#D3DBCD;
+    --ink:#1E2B24;        /* moss ink */
+    --muted:#5D6B62;
+    --plum:#6B4FA0;       /* the one accent: navigation + charts */
+    --plum-wash:#EEE8F7;
+    --crit:#B8325A; --high:#B9650F; --med:#8A7A0E; --ok:#2F7D53;
+    --sans:"Avenir Next","Seravek","Gill Sans Nova","Segoe UI",Candara,sans-serif;
+    --mono:"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-       font:15px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-  .wrap{max-width:960px;margin:0 auto;padding:32px 28px 56px}
-  header{display:flex;justify-content:space-between;align-items:center;
-         border-bottom:2px solid var(--accent);padding-bottom:18px;margin-bottom:8px}
-  h1{font-size:24px;margin:0;letter-spacing:.2px}
-  h1 small{display:block;color:var(--muted);font-size:13px;font-weight:400;margin-top:4px}
-  h2{font-size:17px;margin:34px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
-  .badge{padding:6px 14px;border-radius:999px;font-weight:700;font-size:13px;letter-spacing:.4px}
-  .CRITICAL{background:rgba(255,84,112,.15);color:var(--crit);border:1px solid var(--crit)}
-  .HIGH{background:rgba(255,159,67,.15);color:var(--high);border:1px solid var(--high)}
-  .MEDIUM{background:rgba(255,209,102,.15);color:var(--med);border:1px solid var(--med)}
-  .LOW{background:rgba(45,212,167,.15);color:var(--low);border:1px solid var(--low)}
-  .meta{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 28px;
-        background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-top:16px}
-  .meta div{font-size:13.5px}
-  .meta b{color:var(--muted);font-weight:600;display:inline-block;min-width:140px}
-  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;word-break:break-all}
-  table{width:100%;border-collapse:collapse;margin-top:8px;background:var(--panel);
-        border:1px solid var(--line);border-radius:10px;overflow:hidden}
-  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:top}
-  th{background:#1d2740;color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11.5px;letter-spacing:.5px}
-  tr:last-child td{border-bottom:none}
-  .finding{display:flex;gap:12px;align-items:flex-start;background:var(--panel);
-           border:1px solid var(--line);border-left-width:4px;border-radius:8px;padding:12px 16px;margin:10px 0}
-  .finding.CRITICAL{border-left-color:var(--crit)}
-  .finding.HIGH{border-left-color:var(--high)}
-  .finding.MEDIUM{border-left-color:var(--med)}
-  .finding .t{font-weight:700;margin-bottom:2px}
-  .finding .d{color:var(--muted);font-size:13px}
-  .pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px}
-  .bar{height:22px;border-radius:6px;background:#223;overflow:hidden;border:1px solid var(--line)}
-  .bar>span{display:block;height:100%;background:linear-gradient(90deg,var(--crit),var(--high));
-            text-align:right;color:#fff;font-size:12px;line-height:22px;padding-right:8px;font-weight:700}
-  .tag{display:inline-block;background:#223;border:1px solid var(--line);border-radius:5px;
-       padding:1px 7px;margin:1px 3px 1px 0;font-size:11.5px;color:var(--muted)}
-  .bad{color:var(--crit);font-weight:600}
-  .ok{color:var(--low);font-weight:600}
-  footer{margin-top:40px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--line);padding-top:16px}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.6 var(--sans)}
+  a{color:var(--plum)}
+  :focus-visible{outline:2px solid var(--plum);outline-offset:2px;border-radius:4px}
+
+  /* ---------- layout ---------- */
+  .shell{display:grid;grid-template-columns:288px minmax(0,1fr);min-height:100vh}
+  aside{background:var(--rail);border-right:1px solid var(--rule);position:sticky;top:0;height:100vh;overflow-y:auto;padding:22px 18px 32px}
+  main{padding:34px clamp(20px,4vw,56px) 80px;max-width:1040px}
+
+  /* ---------- case tag (the one memorable element) ---------- */
+  .tag{position:relative;background:var(--sheet);border:1px solid var(--rule);border-radius:6px 6px 6px 22px;padding:18px 16px 16px;margin-bottom:22px}
+  .tag h1{font-size:19px;line-height:1.25;margin:0 0 2px;font-weight:700;letter-spacing:-.01em}
+  .tag .file{font:12px/1.4 var(--mono);color:var(--muted);word-break:break-all;margin-bottom:12px}
+  .tag dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:12.5px}
+  .tag dt{color:var(--muted)} .tag dd{margin:0;font-variant-numeric:tabular-nums}
+
+  /* ---------- sidebar nav ---------- */
+  nav .cat{margin-top:6px}
+  nav .cat > button{all:unset;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;width:100%;font-weight:700;font-size:14.5px;padding:6px 10px;border-radius:6px}
+  nav .cat > button small{font-weight:600;color:var(--muted);font-size:12px}
+  nav .cat > button:hover{background:#DCE4D6}
+  nav .cat.active > button{background:var(--plum);color:#fff}
+  nav .cat.active > button small{color:#E6DDF5}
+
+  /* ---------- sections ---------- */
+  .cat-head{margin:0 0 6px}
+  .cat-head h2{font-size:30px;line-height:1.15;margin:0;letter-spacing:-.015em;font-weight:700}
+  .cat-head p{margin:6px 0 0;color:var(--muted);max-width:64ch}
+  .catblock{margin-bottom:56px}
+  .catblock[hidden]{display:none}
+  section{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:22px 24px 24px;margin-top:22px;scroll-margin-top:16px}
+  section h3{font-size:19px;margin:0 0 4px;letter-spacing:-.005em}
+  section > .lede{margin:0 0 14px;color:var(--muted);max-width:72ch}
+  .mono{font-family:var(--mono);font-size:12.5px;word-break:break-all}
+  .bad{color:var(--crit);font-weight:650} .ok{color:var(--ok);font-weight:650}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+  th{text-align:left;font-weight:650;color:var(--muted);border-bottom:2px solid var(--rule);padding:8px 10px;font-size:13px}
+  td{padding:8px 10px;border-bottom:1px solid #E9EEE5;vertical-align:top}
+  tbody tr:nth-child(even) td{background:#FAFBF8}
+  td.num,th.num{text-align:right;white-space:nowrap}
+  td.mono{word-break:normal;white-space:nowrap} td.mono.wrap{white-space:normal;word-break:break-all}
+  .scroll{overflow-x:auto}
+  .chip{display:inline-block;background:var(--rail);border-radius:4px;padding:0 6px;margin:1px 3px 1px 0;font:12px/1.6 var(--mono);color:var(--ink)}
+
+  /* findings */
+  .finding{display:grid;grid-template-columns:92px 1fr;gap:14px;padding:12px 0;border-top:1px solid #E9EEE5}
+  .finding:first-of-type{border-top:0}
+  .sev{font-weight:800;font-size:12.5px;letter-spacing:.04em}
+  .sev.CRITICAL{color:var(--crit)} .sev.HIGH{color:var(--high)} .sev.MEDIUM{color:var(--med)} .sev.LOW{color:var(--ok)}
+  .finding b{display:block;font-size:15px} .finding span{color:var(--muted);font-size:13.5px}
+
+  /* metrics strip */
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin:4px 0 6px}
+  .facts div{padding:12px 14px;border-right:1px solid var(--rule);background:#FBFCFA}
+  .facts div:last-child{border-right:0}
+  .facts strong{display:block;font-size:22px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .facts span{font-size:12.5px;color:var(--muted)}
+
+  .meter{height:14px;border-radius:7px;background:var(--rail);overflow:hidden;margin:10px 0 6px}
+  .meter i{display:block;height:100%;background:var(--crit)}
+
+  ol.obs{margin:0;padding-left:22px} ol.obs li{margin:7px 0;max-width:80ch}
+
+  svg.chart{width:100%;height:auto;display:block}
+  svg .axis{stroke:var(--rule)} svg .lbl{fill:var(--muted);font:11px var(--sans)}
+  svg .bar{fill:var(--plum)} svg .lane{fill:var(--plum);fill-opacity:.8}
+  svg .lane-txt{fill:var(--ink);font:11px var(--mono)}
+  svg .life{stroke:var(--muted);stroke-dasharray:3 4}
+  svg .req{stroke:var(--plum)} svg .resp{stroke:var(--ok)} svg .syn{stroke:var(--muted);stroke-dasharray:2 3}
+  svg .req-t{fill:var(--plum);font:11px var(--mono)} svg .resp-t{fill:var(--ok);font:11px var(--mono)} svg .syn-t{fill:var(--muted);font:10.5px var(--mono)}
+  svg .host{fill:var(--ink);font:600 13px var(--sans)}
+
+  .limit{overflow-y:auto;overflow-x:auto;border:1px solid var(--rule);border-radius:8px}
+  table.nowrap td,table.nowrap th{white-space:nowrap}
+  .limit thead th{position:sticky;top:0;background:var(--sheet);z-index:1}
+  .ladder-head{display:block;width:100%;height:auto}
+  .menu-btn{display:none}
+  @media (max-width:860px){
+    .shell{grid-template-columns:1fr}
+    aside{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule)}
+    }
+  @media print{
+    aside{display:none} .shell{grid-template-columns:1fr} .catblock[hidden]{display:block!important}
+    section{break-inside:avoid} .limit{max-height:none!important;overflow:visible}
+  }
+  footer{color:var(--muted);font-size:12.5px;margin-top:30px}
 </style>
 </head>
 <body>
-<div class="wrap">
-
-  <header>
-    <h1>PCAP Triage Report<small>{{ meta.pcap_file }} &middot; generated {{ meta.generated_utc }}</small></h1>
-    <span class="badge {{ risk_level }}">RISK: {{ risk_level }}</span>
-  </header>
-
-  <div class="meta">
-    <div><b>Packets</b> {{ meta.packet_count }}</div>
-    <div><b>HTTP transactions</b> {{ meta.http_transactions }}</div>
-    <div><b>Capture start</b> {{ meta.capture_start_utc }}</div>
-    <div><b>Capture end</b> {{ meta.capture_end_utc }}</div>
-    <div style="grid-column:1/3"><b>SHA-256</b> <span class="mono">{{ meta.sha256 }}</span></div>
+{% set n = network.summary %}
+{% set crit_count = findings|selectattr('severity','equalto','CRITICAL')|list|length %}
+<div class="shell">
+<aside>
+  <div class="tag">
+    <h1>Case file</h1>
+    <div class="file">{{ meta.pcap_file }}</div>
+    <dl>
+      <dt>Packets</dt><dd>{{ meta.packet_count }}</dd>
+      <dt>Duration</dt><dd>{{ '%.1f'|format(meta.duration_s) }} s</dd>
+      <dt>Started</dt><dd>{{ meta.capture_start_utc }}</dd>
+      <dt>SHA-256</dt><dd class="mono" title="{{ meta.sha256 }}">{{ meta.sha256[:16] }}…</dd>
+    </dl>
   </div>
 
-  <h2>Key Findings</h2>
-  {% if findings %}
-    {% for f in findings %}
-    <div class="finding {{ f.severity }}">
-      <span class="pill {{ f.severity }}">{{ f.severity }}</span>
-      <div><div class="t">{{ f.title }}</div><div class="d">{{ f.detail }}</div></div>
+
+  <nav aria-label="Report categories">
+    <div class="cat" data-cat="overview"><button type="button" aria-controls="cat-overview">Overview <small>{{ findings|length }} findings</small></button></div>
+    <div class="cat" data-cat="exposure"><button type="button" aria-controls="cat-exposure">Exposure <small>secrets on the wire</small></button></div>
+    <div class="cat" data-cat="transport"><button type="button" aria-controls="cat-transport">Transport <small>encryption</small></button></div>
+    <div class="cat" data-cat="network"><button type="button" aria-controls="cat-network">Network <small>{{ n.flow_count }} flows</small></button></div>
+    <div class="cat" data-cat="application"><button type="button" aria-controls="cat-application">Application <small>HTTP</small></button></div>
+  </nav>
+</aside>
+
+<main>
+<!-- ===================== OVERVIEW ===================== -->
+<div class="catblock" id="cat-overview" data-cat="overview">
+  <header class="cat-head"><h2>Overview</h2>
+    <p>What this capture proves, ranked by severity. Use the sidebar to open each category.</p></header>
+
+  <section id="s-summary">
+    <h3>Case summary</h3>
+    <p class="lede">Evidence integrity and the scope of the capture.</p>
+    <div class="facts">
+      <div><strong>{{ meta.packet_count }}</strong><span>packets</span></div>
+      <div><strong>{{ meta.http_transactions }}</strong><span>HTTP transactions</span></div>
+      <div><strong>{{ n.flow_count }}</strong><span>TCP/UDP flows</span></div>
+      <div><strong>{{ encryption.cleartext_pct }}%</strong><span>cleartext</span></div>
     </div>
-    {% endfor %}
-  {% else %}
-    <p class="ok">No high-risk issues detected.</p>
-  {% endif %}
+    <table><tbody>
+      <tr><td>File</td><td class="mono">{{ meta.pcap_file }}</td></tr>
+      <tr><td>SHA-256</td><td class="mono wrap">{{ meta.sha256 }}</td></tr>
+      <tr><td>Capture window</td><td>{{ meta.capture_start_utc }} to {{ meta.capture_end_utc }} ({{ '%.1f'|format(meta.duration_s) }} s)</td></tr>
+      <tr><td>Report generated</td><td>{{ meta.generated_utc }}</td></tr>
+    </tbody></table>
+  </section>
 
-  <h2>Recovered Credentials</h2>
-  {% if credentials %}
-  <table>
-    <tr><th>Host</th><th>Endpoint</th><th>Username</th><th>Password</th><th>Fields</th></tr>
-    {% for c in credentials %}
-    <tr>
-      <td class="mono">{{ c.host }}</td>
-      <td class="mono">{{ c.uri }}</td>
-      <td class="bad">{{ c.username if c.username is not none else '—' }}</td>
-      <td class="bad">{{ c.password if c.password is not none else '—' }}</td>
-      <td>{% for fld in c.all_fields %}<span class="tag">{{ fld }}</span>{% endfor %}</td>
-    </tr>
-    {% endfor %}
-  </table>
-  {% else %}<p class="ok">None found.</p>{% endif %}
-
-  <h2>Session Cookies</h2>
-  {% if session_cookies %}
-  <table>
-    <tr><th>Name</th><th>Secure</th><th>HttpOnly</th><th>SameSite</th><th>Reuse</th><th>Issues</th></tr>
-    {% for c in session_cookies %}
-    <tr>
-      <td class="mono">{{ c.name }}</td>
-      <td class="{{ 'ok' if c.secure else 'bad' }}">{{ 'yes' if c.secure else 'NO' }}</td>
-      <td class="{{ 'ok' if c.httponly else 'bad' }}">{{ 'yes' if c.httponly else 'NO' }}</td>
-      <td class="{{ 'ok' if c.samesite else 'bad' }}">{{ c.samesite or 'NONE' }}</td>
-      <td>{{ c.reuse_count }}&times;</td>
-      <td class="d">{% for i in c.issues %}&bull; {{ i }}<br>{% endfor %}</td>
-    </tr>
-    {% endfor %}
-  </table>
-  {% else %}<p class="ok">No session cookies observed.</p>{% endif %}
-
-  <h2>Authentication Artifacts</h2>
-  {% if auth.basic_auth or auth.jwts or auth.api_keys %}
-    {% if auth.basic_auth %}
-    <table>
-      <tr><th>HTTP Basic Auth — Endpoint</th><th>Username</th><th>Password</th></tr>
-      {% for b in auth.basic_auth %}
-      <tr><td class="mono">{{ b.endpoint }}</td><td class="bad">{{ b.username }}</td><td class="bad">{{ b.password }}</td></tr>
-      {% endfor %}
-    </table>
-    {% endif %}
-    {% if auth.api_keys %}
-    <table>
-      <tr><th>API Key / Secret</th><th>Value</th><th>Where</th></tr>
-      {% for k in auth.api_keys %}
-      <tr><td class="mono">{{ k.name }}</td><td class="bad mono">{{ k.value }}</td><td>{{ k.where }}</td></tr>
-      {% endfor %}
-    </table>
-    {% endif %}
-    {% if auth.jwts %}
-    <table>
-      <tr><th>JWT (alg)</th><th>Claims (subset)</th></tr>
-      {% for j in auth.jwts %}
-      <tr><td class="mono">{{ (j.header or {}).get('alg','?') }}</td>
-          <td class="mono">{{ (j.payload or {})|list|join(', ') }}</td></tr>
-      {% endfor %}
-    </table>
-    {% endif %}
-  {% else %}<p class="ok">No Basic-Auth, JWT, or API-key artifacts observed.</p>{% endif %}
-
-  <h2>TLS / Encrypted Sessions</h2>
-  {% if tls.tls_sessions %}
-  <table>
-    <tr><th>Server</th><th>Port</th><th>Version</th><th>SNI</th></tr>
-    {% for s in tls.tls_sessions %}
-    <tr><td class="mono">{{ s.server }}</td><td>{{ s.port }}</td><td>{{ s.version }}</td><td class="mono">{{ s.sni or '—' }}</td></tr>
-    {% endfor %}
-  </table>
-  {% else %}<p class="bad">No TLS sessions observed — the capture contains no encrypted application traffic.</p>{% endif %}
-
-  <h2>Transport Encryption</h2>
-  <div class="bar"><span style="width:{{ encryption.cleartext_pct }}%">{{ encryption.cleartext_pct }}% cleartext</span></div>
-  <p class="d" style="color:var(--muted)">
-    Cleartext (HTTP): {{ '{:,}'.format(encryption.cleartext_bytes) }} bytes &middot;
-    Encrypted (TLS): {{ '{:,}'.format(encryption.encrypted_bytes) }} bytes &mdash;
-    <b>{{ encryption.verdict }}.</b>
-  </p>
-
-  <h2>HTTP Endpoints ({{ endpoints|length }})</h2>
-  <table>
-    <tr><th>Method</th><th>Path</th><th>Hits</th><th>Status</th><th>Form fields</th></tr>
-    {% for e in endpoints %}
-    <tr>
-      <td class="mono">{{ e.method }}</td>
-      <td class="mono">{{ e.path }}</td>
-      <td>{{ e.count }}</td>
-      <td>{{ e.status|join(', ') }}</td>
-      <td>{% for fld in e.form_fields %}<span class="tag">{{ fld }}</span>{% endfor %}</td>
-    </tr>
-    {% endfor %}
-  </table>
-
-  <footer>Generated by pcap-triage &middot; offline forensic analysis &middot; evidence integrity via SHA-256</footer>
+  <section id="s-findings">
+    <h3>Key findings</h3>
+    <p class="lede">The highest severity here sets the overall rating of {{ risk_level|lower }}.</p>
+    {% for f in findings %}
+    <div class="finding"><div class="sev {{ f.severity }}">{{ f.severity|capitalize }}</div><div><b>{{ f.title }}</b><span>{{ f.detail }}</span></div></div>
+    {% else %}<p class="ok">No high-risk issues detected.</p>{% endfor %}
+  </section>
 </div>
+
+<!-- ===================== EXPOSURE ===================== -->
+<div class="catblock" id="cat-exposure" data-cat="exposure">
+  <header class="cat-head"><h2>Exposure</h2>
+    <p>Credentials, session tokens and secrets that anyone on the network path could read.</p></header>
+
+  <section id="s-creds">
+    <h3>Recovered credentials</h3>
+    <p class="lede">Username and password fields read straight out of form POST bodies.</p>
+    {% if credentials %}<div class="scroll"><table>
+      <thead><tr><th>Host</th><th>Endpoint</th><th>Username</th><th>Password</th><th>Form fields</th></tr></thead><tbody>
+      {% for c in credentials %}<tr><td class="mono">{{ c.host }}</td><td class="mono">{{ c.uri }}</td>
+        <td class="bad">{{ c.username if c.username is not none else '—' }}</td><td class="bad">{{ c.password if c.password is not none else '—' }}</td>
+        <td>{% for fld in c.all_fields %}<span class="chip">{{ fld }}</span>{% endfor %}</td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<p class="ok">No credentials found.</p>{% endif %}
+  </section>
+
+  <section id="s-cookies">
+    <h3>Session cookies</h3>
+    <p class="lede">Each session cookie checked for the attributes that keep it off plaintext links and away from scripts.</p>
+    {% if session_cookies %}<div class="scroll"><table>
+      <thead><tr><th>Name</th><th>Secure</th><th>HttpOnly</th><th>SameSite</th><th class="num">Reused</th><th>Issues</th></tr></thead><tbody>
+      {% for c in session_cookies %}<tr><td class="mono">{{ c.name }}</td>
+        <td class="{{ 'ok' if c.secure else 'bad' }}">{{ 'Yes' if c.secure else 'No' }}</td>
+        <td class="{{ 'ok' if c.httponly else 'bad' }}">{{ 'Yes' if c.httponly else 'No' }}</td>
+        <td class="{{ 'ok' if c.samesite else 'bad' }}">{{ c.samesite or 'Not set' }}</td>
+        <td class="num">{{ c.reuse_count }}×</td>
+        <td>{% for i in c.issues %}{{ i }}<br>{% endfor %}</td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<p class="ok">No session cookies observed.</p>{% endif %}
+  </section>
+
+  <section id="s-rotation">
+    <h3>Session lifecycle</h3>
+    <p class="lede">{{ session_rotation.distinct_session_ids }} distinct session ID(s) seen in the whole capture. A safe application issues a new ID at every login and retires it at logout.</p>
+    {% if session_rotation.events %}<table>
+      <thead><tr><th>Event</th><th>URI</th><th>ID before</th><th>ID after</th><th>Rotated</th></tr></thead><tbody>
+      {% for e in session_rotation.events %}<tr><td>{{ e.event|capitalize }}</td><td class="mono">{{ e.uri }}</td>
+        <td class="mono">{{ (e.id_before or '—')[:12] }}…</td><td class="mono">{{ (e.id_after or '—')[:12] }}…</td>
+        <td class="{{ 'ok' if e.rotated else 'bad' }}">{{ 'Yes' if e.rotated else ('No' if e.rotated is sameas false else 'Unknown') }}</td></tr>{% endfor %}
+    </tbody></table>{% else %}<p class="ok">No login or logout events observed.</p>{% endif %}
+  </section>
+
+  <section id="s-auth">
+    <h3>Tokens and keys</h3>
+    <p class="lede">HTTP Basic-Auth headers, JSON Web Tokens and API keys sent in cleartext.</p>
+    {% if auth.basic_auth or auth.jwts or auth.api_keys %}
+      {% if auth.basic_auth %}<table><thead><tr><th>Basic-Auth endpoint</th><th>Username</th><th>Password</th></tr></thead><tbody>
+        {% for b in auth.basic_auth %}<tr><td class="mono">{{ b.endpoint }}</td><td class="bad">{{ b.username }}</td><td class="bad">{{ b.password }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+      {% if auth.api_keys %}<table><thead><tr><th>Key</th><th>Value</th><th>Where</th></tr></thead><tbody>
+        {% for k in auth.api_keys %}<tr><td class="mono">{{ k.name }}</td><td class="bad mono">{{ k.value }}</td><td>{{ k.where }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+      {% if auth.jwts %}<table><thead><tr><th>JWT algorithm</th><th>Claims</th></tr></thead><tbody>
+        {% for j in auth.jwts %}<tr><td class="mono">{{ (j.header or {}).get('alg','?') }}</td><td class="mono">{{ (j.payload or {})|list|join(', ') }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+    {% else %}<p class="ok">No Basic-Auth, JWT or API-key artefacts observed.</p>{% endif %}
+  </section>
+</div>
+
+<!-- ===================== TRANSPORT ===================== -->
+<div class="catblock" id="cat-transport" data-cat="transport">
+  <header class="cat-head"><h2>Transport</h2>
+    <p>How much of the application traffic was protected by TLS.</p></header>
+
+  <section id="s-ratio">
+    <h3>Cleartext share</h3>
+    <p class="lede">{{ encryption.verdict }}.</p>
+    <div class="meter" role="img" aria-label="{{ encryption.cleartext_pct }} percent cleartext"><i style="width:{{ encryption.cleartext_pct }}%"></i></div>
+    <table><tbody>
+      <tr><td>Cleartext (HTTP)</td><td class="num">{{ '{:,}'.format(encryption.cleartext_bytes) }} bytes</td></tr>
+      <tr><td>Encrypted (TLS)</td><td class="num">{{ '{:,}'.format(encryption.encrypted_bytes) }} bytes</td></tr>
+    </tbody></table>
+  </section>
+
+  <section id="s-tls">
+    <h3>TLS sessions</h3>
+    {% if tls.tls_sessions %}<table><thead><tr><th>Server</th><th>Port</th><th>Version</th><th>SNI</th></tr></thead><tbody>
+      {% for s in tls.tls_sessions %}<tr><td class="mono">{{ s.server }}</td><td>{{ s.port }}</td><td>{{ s.version }}</td><td class="mono">{{ s.sni or '—' }}</td></tr>{% endfor %}</tbody></table>
+    {% else %}<p class="lede">None. The capture contains no encrypted application traffic, so every request, header and response body above was readable.</p>{% endif %}
+  </section>
+</div>
+
+<!-- ===================== NETWORK ===================== -->
+<div class="catblock" id="cat-network" data-cat="network">
+  <header class="cat-head"><h2>Network</h2>
+    <p>The capture profiled as a network: who talked, when, how much, and how well the connections behaved.</p></header>
+
+  <section id="s-profile">
+    <h3>Profile and observations</h3>
+    <div class="facts">
+      <div><strong>{{ n.flow_count }}</strong><span>flows ({{ n.tcp_flows }} TCP, {{ n.udp_flows }} UDP)</span></div>
+      <div><strong>{{ n.host_count }}</strong><span>addresses seen</span></div>
+      <div><strong>{{ '%.1f'|format(n.avg_throughput_bps/1000) }}</strong><span>average kbit/s</span></div>
+      <div><strong>{{ '%.0f'|format(n.peak_throughput_bps/1000) }}</strong><span>peak kbit/s at {{ n.peak_at_s }} s</span></div>
+      <div><strong>{{ n.max_parallel_conns }}</strong><span>most connections open at once</span></div>
+    </div>
+    <h4 style="margin:20px 0 6px;font-size:15px">What the flow data shows</h4>
+    <ol class="obs">{% for i in network.insights %}<li>{{ i }}</li>{% endfor %}</ol>
+  </section>
+
+  {% set c = network.chart %}
+  <section id="s-io">
+    <h3>Throughput over time</h3>
+    <p class="lede">Bytes per {{ network.io.bin_s }} s bin. Hover a bar for packets and open connections.</p>
+    <svg class="chart" viewBox="-70 -10 {{ c.width + 80 }} 145" role="img" aria-label="IO graph of bytes over time">
+      <line x1="0" y1="110" x2="{{ c.width }}" y2="110" class="axis"/>
+      <text x="-8" y="4" class="lbl" text-anchor="end">{{ '{:,}'.format(c.io_peak_bytes) }} B</text>
+      <text x="-8" y="110" class="lbl" text-anchor="end">0</text>
+      {% for b in c.io %}<rect x="{{ b.x }}" y="{{ 110 - b.h }}" width="{{ b.w }}" height="{{ b.h }}" class="bar"><title>{{ b.t }} s: {{ b.bytes }} B, {{ b.packets }} packets, {{ b.open }} open connection(s)</title></rect>{% endfor %}
+      {% for t in c.ticks %}<text x="{{ t.x }}" y="128" class="lbl" text-anchor="middle">{{ t.t }} s</text>{% endfor %}
+    </svg>
+    {% if network.activity.bursts %}
+    <h4 style="margin:18px 0 6px;font-size:15px">Activity bursts (idle gaps of {{ network.activity.gap_threshold_s|int }} s or more split them)</h4>
+    <table><thead><tr><th>Burst</th><th class="num">From</th><th class="num">To</th><th>Flows</th><th>Requests</th></tr></thead><tbody>
+      {% for b in network.activity.bursts %}<tr><td>{{ b.id }}</td><td class="num">{{ b.start }} s</td><td class="num">{{ b.end }} s</td><td>{{ b.flows|join(', ') }}</td>
+        <td>{% for r in b.requests %}<span class="chip">{{ r }}</span>{% endfor %}</td></tr>{% endfor %}
+    </tbody></table>{% endif %}
+  </section>
+
+  <section id="s-timeline">
+    <h3>Connection timeline</h3>
+    <p class="lede">One lane per TCP connection, from SYN to FIN, labelled with the first request it carried.</p>
+    <div class="scroll"><svg class="chart" viewBox="-96 -6 {{ c.width + 106 }} {{ c.lanes_height + 30 }}" role="img" aria-label="Connection timeline" style="min-width:640px">
+      {% for l in c.lanes %}
+      <text x="-8" y="{{ l.y + 9 }}" class="lbl" text-anchor="end">#{{ l.flow_id }} {{ l.label }}</text>
+      <rect x="{{ l.x }}" y="{{ l.y }}" width="{{ l.w }}" height="12" rx="3" class="lane"><title>Flow #{{ l.flow_id }}: {{ l.reqs|join(', ') }}, closed by {{ l.close }}</title></rect>
+      {% if l.x > c.width * 0.7 %}<text x="{{ l.x - 5 }}" y="{{ l.y + 9 }}" class="lane-txt" text-anchor="end">{{ (l.reqs|first or '')[:40] }}</text>{% else %}<text x="{{ l.x + l.w + 5 }}" y="{{ l.y + 9 }}" class="lane-txt">{{ (l.reqs|first or '')[:40] }}</text>{% endif %}
+      {% endfor %}
+      {% for t in c.ticks %}<text x="{{ t.x }}" y="{{ c.lanes_height + 18 }}" class="lbl" text-anchor="middle">{{ t.t }} s</text>{% endfor %}
+    </svg></div>
+  </section>
+
+  {% set L = network.ladder_chart %}
+  <section id="s-ladder">
+    <h3>Session flow graph</h3>
+    <p class="lede">Every connection opening, HTTP request and HTTP response between the two hosts, in time order, like Wireshark's Flow Graph.</p>
+    <svg class="chart ladder-head" viewBox="0 0 760 30" aria-hidden="true">
+      <text x="150" y="20" class="host" text-anchor="middle">{{ L.client }} (client)</text>
+      <text x="610" y="20" class="host" text-anchor="middle">{{ L.server }} (server)</text>
+    </svg>
+    <div class="limit" data-show="15" data-row-y0="40" data-row-h="20" data-vb="760">
+    <svg class="chart" viewBox="0 20 760 {{ L.height - 20 }}" role="img" aria-label="Sequence diagram of the session">
+      <line x1="150" y1="20" x2="150" y2="{{ L.height }}" class="life"/>
+      <line x1="610" y1="20" x2="610" y2="{{ L.height }}" class="life"/>
+      <defs>
+        <marker id="ah-req" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6B4FA0"/></marker>
+        <marker id="ah-resp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2F7D53"/></marker>
+        <marker id="ah-syn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5D6B62"/></marker>
+      </defs>
+      {% for r in L.rows %}
+        {% set cls = 'req' if r.kind == 'request' else ('resp' if r.kind == 'response' else 'syn') %}
+        <text x="70" y="{{ r.y + 4 }}" class="lbl" text-anchor="end">{{ '%.3f'|format(r.t) }} s</text>
+        <text x="138" y="{{ r.y + 4 }}" class="lbl" text-anchor="end">:{{ r.port }}</text>
+        {% if r.to_server %}<line x1="152" y1="{{ r.y }}" x2="607" y2="{{ r.y }}" class="{{ cls }}" marker-end="url(#ah-{{ cls }})"/>
+        {% else %}<line x1="608" y1="{{ r.y }}" x2="153" y2="{{ r.y }}" class="{{ cls }}" marker-end="url(#ah-{{ cls }})"/>{% endif %}
+        <text x="380" y="{{ r.y - 4 }}" class="{{ cls }}-t" text-anchor="middle">{{ r.label }}</text>
+      {% endfor %}
+    </svg></div>
+  </section>
+
+  <section id="s-hosts">
+    <h3>Hosts and talkers</h3>
+    <p class="lede">Every device seen at layer 2, what it is likely to be, and how much it sent.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>MAC</th><th>Addresses</th><th>Role</th><th class="num">Frames</th><th class="num">TTL</th><th>Likely OS</th><th class="num">Hops</th></tr></thead><tbody>
+      {% for h in network.l2_inventory %}<tr><td class="mono">{{ h.mac }}</td><td class="mono">{{ h.ips|join(', ') }}</td><td>{{ h.role[:1]|upper ~ h.role[1:] }}</td>
+        <td class="num">{{ h.frames }}</td><td class="num">{{ h.observed_ttl if h.observed_ttl is not none else '—' }}</td>
+        <td>{{ h.os_family_guess or '—' }}</td><td class="num">{{ h.hops_away if h.hops_away is not none else '—' }}</td></tr>{% endfor %}
+    </tbody></table></div>
+    <h4 style="margin:18px 0 6px;font-size:15px">Top talkers by IP</h4>
+    <div class="scroll"><table>
+      <thead><tr><th>Address</th><th class="num">Packets</th><th class="num">Bytes sent</th><th class="num">Bytes received</th><th class="num">Share of bytes sent</th></tr></thead><tbody>
+      {% for e in network.endpoints %}<tr><td class="mono">{{ e.address }}</td><td class="num">{{ e.packets }}</td><td class="num">{{ '{:,}'.format(e.bytes_tx) }}</td><td class="num">{{ '{:,}'.format(e.bytes_rx) }}</td><td class="num">{{ e.share_pct }}%</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+
+  <section id="s-conv">
+    <h3>Conversations</h3>
+    <p class="lede">Traffic between each pair of addresses, at the Ethernet and IP layers.</p>
+    {% for layer, rows in [('Ethernet', network.conversations.ethernet), ('IP', network.conversations.ip)] %}
+    <h4 style="margin:14px 0 6px;font-size:15px">{{ layer }}</h4>
+    <div class="scroll"><table>
+      <thead><tr><th>Address A</th><th>Address B</th><th class="num">Frames</th><th class="num">A to B</th><th class="num">B to A</th><th class="num">Start</th><th class="num">Duration</th><th class="num">kbit/s</th></tr></thead><tbody>
+      {% for r in rows %}<tr><td class="mono">{{ r.a }}</td><td class="mono">{{ r.b }}</td><td class="num">{{ r.frames }}</td><td class="num">{{ '{:,}'.format(r.bytes_a_to_b) }}</td><td class="num">{{ '{:,}'.format(r.bytes_b_to_a) }}</td><td class="num">{{ r.rel_start }} s</td><td class="num">{{ r.duration_s }} s</td><td class="num">{{ '%.1f'|format(r.bps/1000) }}</td></tr>{% endfor %}
+    </tbody></table></div>
+    {% endfor %}
+  </section>
+
+  {% set h = network.tcp_health %}
+  <section id="s-tcp">
+    <h3>TCP health</h3>
+    <p class="lede">Handshake round-trip time, server response time, loss and flow-control problems.</p>
+    <div class="facts">
+      <div><strong>{{ h.handshake_rtt_ms.median }} ms</strong><span>median handshake RTT</span></div>
+      <div><strong>{{ h.ttfb_ms.median }} ms</strong><span>median server response time</span></div>
+      <div><strong>{{ h.retransmissions }}</strong><span>retransmissions</span></div>
+      <div><strong>{{ h.zero_window }}</strong><span>zero-window events</span></div>
+    </div>
+    <table style="margin-top:12px"><thead><tr><th>Side</th><th class="num">MSS</th><th class="num">Window scale</th><th class="num">Initial window</th><th class="num">TTL</th></tr></thead><tbody>
+      {% for side, o in [('Client SYN', h.client_syn_options), ('Server SYN-ACK', h.server_synack_options)] %}{% if o %}<tr><td>{{ side }}</td><td class="num">{{ o.mss }}</td><td class="num">{{ o.wscale }}</td><td class="num">{{ '{:,}'.format(o.window) }}</td><td class="num">{{ o.ttl }}</td></tr>{% endif %}{% endfor %}
+    </tbody></table>
+    <h4 style="margin:18px 0 6px;font-size:15px">Slowest server responses</h4>
+    <table><thead><tr><th>Flow</th><th>Request</th><th class="num">Time to first byte</th></tr></thead><tbody>
+      {% for s in h.slowest_responses %}<tr><td>#{{ s.flow_id }}</td><td class="mono">{{ s.request }}</td><td class="num">{{ s.ttfb_ms }} ms</td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+
+  {% set pl = network.packet_lengths %}
+  <section id="s-sizes">
+    <h3>Packet sizes</h3>
+    <p class="lede">Frame sizes from {{ pl.min }} to {{ '{:,}'.format(pl.max) }} bytes (median {{ pl.median }}). {% if pl.over_mtu_frames %}{{ pl.over_mtu_frames }} frames exceed the 1,514-byte Ethernet limit because the capturing NIC merged segments (offload).{% endif %}</p>
+    <table><thead><tr><th>Size (bytes)</th><th class="num">Frames</th><th class="num">Share</th><th class="num">Bytes</th><th style="width:38%"></th></tr></thead><tbody>
+      {% for b in pl.buckets %}<tr><td>{{ b.range }}</td><td class="num">{{ b.frames }}</td><td class="num">{{ b.pct }}%</td><td class="num">{{ '{:,}'.format(b.bytes) }}</td>
+        <td><div class="meter" style="margin:4px 0"><i style="width:{{ b.pct }}%;background:var(--plum)"></i></div></td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+
+  <section id="s-phs">
+    <h3>Protocol hierarchy</h3>
+    <table><thead><tr><th>Stack</th><th class="num">Frames</th><th class="num">Share of frames</th><th class="num">Bytes</th></tr></thead><tbody>
+      {% for p in network.protocol_hierarchy %}<tr><td class="mono">{{ p.stack }}</td><td class="num">{{ p.frames }}</td><td class="num">{{ p.pct_frames }}%</td><td class="num">{{ '{:,}'.format(p.bytes) }}</td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+
+  <section id="s-flows">
+    <h3>Flow records</h3>
+    <p class="lede">One row per bidirectional flow, in NetFlow style. The same rows are written to the CSV export.</p>
+    <div class="limit" data-show="15"><table class="nowrap" style="font-size:12.5px">
+      <thead><tr><th>#</th><th>Start</th><th>5-tuple</th><th class="num">Duration</th><th class="num">Packets out/in</th><th class="num">Bytes out/in</th><th class="num">RTT</th><th>Close</th><th>HTTP</th></tr></thead><tbody>
+      {% for f in network.flows %}<tr><td>{{ f.flow_id }}</td><td class="mono">{{ f.start_utc }}</td>
+        <td class="mono">{{ f.proto }} {{ f.src_ip }}:{{ f.src_port }} → {{ f.dst_ip }}:{{ f.dst_port }}</td>
+        <td class="num">{{ f.duration_s }} s</td><td class="num">{{ f.pkts_fwd }}/{{ f.pkts_rev }}</td>
+        <td class="num">{{ '{:,}'.format(f.bytes_fwd) }}/{{ '{:,}'.format(f.bytes_rev) }}</td>
+        <td class="num">{{ f.handshake_rtt_ms if f.handshake_rtt_ms is not none else '—' }} ms</td>
+        <td>{{ f.close }}{% if f.teardown == 'simultaneous' %} (simultaneous){% endif %}</td>
+        <td class="mono">{% for r in f.http_requests %}{{ r }} <span style="color:var(--muted)">{{ f.http_status[loop.index0] if f.http_status|length > loop.index0 }}</span>{% if not loop.last %}<br>{% endif %}{% endfor %}</td></tr>{% endfor %}
+    </tbody></table></div>
+
+  </section>
+</div>
+
+<!-- ===================== APPLICATION ===================== -->
+<div class="catblock" id="cat-application" data-cat="application">
+  <header class="cat-head"><h2>Application</h2>
+    <p>Every HTTP endpoint the browser hit, with the form fields it submitted.</p></header>
+  <section id="s-endpoints">
+    <h3>HTTP endpoints</h3>
+    <div class="scroll"><table>
+      <thead><tr><th>Method</th><th>Path</th><th class="num">Hits</th><th>Status</th><th>Form fields</th></tr></thead><tbody>
+      {% for e in endpoints %}<tr><td class="mono">{{ e.method }}</td><td class="mono">{{ e.path }}</td><td class="num">{{ e.count }}</td><td>{{ e.status|join(', ') }}</td>
+        <td>{% for fld in e.form_fields %}<span class="chip">{{ fld }}</span>{% endfor %}</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+
+<footer>Generated offline by pcap-triage from {{ meta.pcap_file }}. Evidence integrity is anchored by the SHA-256 above.</footer>
+</main>
+</div>
+
+<script>
+(function(){
+  var blocks = document.querySelectorAll('.catblock');
+  var cats = document.querySelectorAll('nav .cat');
+  function sizeLimits(){
+    document.querySelectorAll('.limit[data-show]').forEach(function(box){
+      if (!box.offsetParent) return;                 // hidden category: size it when shown
+      var n = parseInt(box.dataset.show, 10), h = 0;
+      var table = box.querySelector('table');
+      if (table) {
+        var head = table.tHead ? table.tHead.offsetHeight : 0;
+        var rows = table.tBodies[0].rows;
+        if (rows.length <= n) { box.style.maxHeight = ''; return; }
+        for (var i = 0; i < n; i++) h += rows[i].offsetHeight;
+        h += head;
+      } else {
+        var svg = box.querySelector('svg');
+        var scale = svg.getBoundingClientRect().width / parseFloat(box.dataset.vb);
+        h = (parseFloat(box.dataset.rowY0) - 20 + n * parseFloat(box.dataset.rowH) - 13) * scale;
+      }
+      box.style.maxHeight = Math.ceil(h + 2) + 'px';
+    });
+  }
+  window.addEventListener('resize', sizeLimits);
+  function show(cat){
+    blocks.forEach(function(b){ b.hidden = b.dataset.cat !== cat; });
+    cats.forEach(function(c){
+      var on = c.dataset.cat === cat;
+      c.classList.toggle('active', on);
+      c.querySelector('button').setAttribute('aria-expanded', String(on));
+    });
+    sizeLimits();
+  }
+  function current(){
+    var id = location.hash.slice(1);
+    var el = id && document.getElementById(id);
+    var blk = el && el.closest('.catblock');
+    return blk ? blk.dataset.cat : 'overview';
+  }
+  cats.forEach(function(c){
+    c.querySelector('button').addEventListener('click', function(){
+      history.replaceState(null, '', '#cat-' + c.dataset.cat);
+      show(c.dataset.cat); window.scrollTo(0, 0);
+    });
+  });
+  window.addEventListener('hashchange', function(){ show(current()); });
+  show(current());
+})();
+</script>
 </body>
 </html>

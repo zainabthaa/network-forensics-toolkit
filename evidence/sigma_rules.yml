@@ -3,7 +3,7 @@ id: b0576e7a-6cf4-5e0b-bb02-b30349c2e668
 status: experimental
 description: Detects username/password fields or HTTP Basic auth sent over unencrypted HTTP.
 author: pcap-triage
-date: 2026-11-24
+date: 2026-11-28
 logsource:
     category: proxy
 detection:
@@ -29,7 +29,7 @@ id: 2e7ec1f3-9823-5cc5-8c12-1ceffb139017
 status: experimental
 description: Detects Set-Cookie responses for session identifiers that omit the Secure attribute, allowing transmission over HTTP.
 author: pcap-triage
-date: 2026-11-24
+date: 2026-11-28
 logsource:
     category: proxy
 detection:
@@ -54,7 +54,7 @@ id: 127d7987-9656-5095-92e7-4c1b5fffd39a
 status: experimental
 description: Detects authenticated web sessions (session cookie present) carried entirely over HTTP with no TLS.
 author: pcap-triage
-date: 2026-11-24
+date: 2026-11-28
 logsource:
     category: proxy
 detection:

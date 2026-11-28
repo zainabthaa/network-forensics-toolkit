@@ -48,6 +48,7 @@ The target web app (DVWA) runs entirely over **unencrypted HTTP**. A 4.4-minute 
 | 3 | **Session token (`PHPSESSID`) exposed and replayable**: the same value is reused across 28 requests | 🟠 High | Frames 32 & 43 |
 | 4 | The authenticated session cookie has **none** of `Secure` / `HttpOnly` / `SameSite` | 🟠 High | Cookie inspector, triage tool |
 | 5 | **Full session hijack demonstrated**: the captured token alone logs an attacker in as `admin`, no password needed | 🔴 Critical | curl replay + browser cookie injection |
+| 6 | **Session ID never rotated**: one `PHPSESSID` value survives three logins and a logout (session fixation, CWE-384) | 🟠 High | Triage tool, session-rotation check |
 
 **Overall risk: CRITICAL.** Fix: serve everything over TLS 1.2+ with HSTS, set `Secure` + `HttpOnly` + `SameSite` on the session cookie, and regenerate the session ID at login.
 
@@ -82,9 +83,17 @@ flowchart LR
 
 ## ⚡ Quick start
 
+**One command** (creates a virtualenv, installs, runs the tests, analyses the sample capture and opens the report):
+
 ```bash
 git clone https://github.com/zainabthaa/network-forensics-toolkit.git
 cd network-forensics-toolkit
+./run.sh                         # or: ./run.sh path/to/your.pcapng
+```
+
+Outputs land in `out/`. To do the same steps by hand:
+
+```bash
 
 python3 -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
@@ -104,8 +113,10 @@ Expected console output:
 [+] HTML report  -> report.html
 [+] Sigma rules  -> sigma_rules.yml
 [+] STIX bundle  -> stix_bundle.json
+[+] Flow records -> flows.csv
 
 [=] Risk: CRITICAL | 3 form-cred(s), 0 basic-auth, 0 JWT(s), 0 API key(s), 1 session cookie(s), 100.0% cleartext, 0 TLS session(s)
+[=] Network: 22 flow(s), 4 host(s), 266.107s, avg 10.6 kbit/s, peak 688.0 kbit/s, max 2 parallel connection(s)
 ```
 
 ---
@@ -118,7 +129,8 @@ Expected console output:
 |----------|--------|-------------------|
 | Plaintext credentials | `detectors/credentials.py` | Username/password fields in URL-encoded POST bodies (`username`, `email`, `password`, `pwd`, …) |
 | Auth artifacts | `detectors/auth.py` | HTTP Basic-Auth (decoded), JWTs in headers/cookies/bodies (header + payload decoded), API keys (named params and known patterns such as AWS, Stripe, GitHub, Slack, Google) |
-| Session cookies | `detectors/cookies.py` | `PHPSESSID`, `JSESSIONID`, `connect.sid`, … audited for `Secure` / `HttpOnly` / `SameSite`, plus how many requests reuse the same token |
+| Session cookies | `detectors/cookies.py` | `PHPSESSID`, `JSESSIONID`, `connect.sid`, … audited for `Secure` / `HttpOnly` / `SameSite`, how many requests reuse the same token, and whether the ID is regenerated at login and invalidated at logout |
+| Network profiling | `detectors/flows.py` | Bidirectional 5-tuple flow records (NetFlow-style CSV), Ethernet and IP conversation tables, an IP-to-MAC host inventory with TTL-based OS and hop inference, top talkers, protocol hierarchy, packet-size distribution, IO graph with activity bursts, a per-connection timeline, a session flow graph (sequence diagram), TCP health (handshake RTT, server response time, retransmissions, zero windows, SYN options, teardown type), and automatically generated analyst observations |
 | TLS awareness | `detectors/tls.py` | Parses TLS ClientHello records to report the version and SNI of encrypted sessions, without decrypting anything |
 | Traffic composition | `detectors/traffic.py` | Cleartext vs encrypted byte ratio, and a full endpoint inventory (method, path, hit count, status codes, form fields) |
 | Stream reassembly | `detectors/pcap_http.py` | Per-direction TCP reassembly by sequence number (handles retransmissions/overlaps), HTTP message splitting by `Content-Length`, keep-alive request/response pairing |
@@ -133,6 +145,7 @@ Findings are ranked **CRITICAL → HIGH → MEDIUM**, and the highest one sets t
 | `report.json` | Machine-readable JSON | Scripting, diffing two captures, feeding other tools |
 | `sigma_rules.yml` | [Sigma](https://sigmahq.io) rules, tagged with MITRE ATT&CK (T1040, T1557, T1550.004) | Detecting the same exposure in proxy/Zeek logs in any SIEM |
 | `stix_bundle.json` | [STIX 2.1](https://oasis-open.github.io/cti-documentation/) bundle | Importing indicators (hosts, URLs, User-Agent) into a threat-intel platform |
+| `flows.csv` | NetFlow-style flow records, one row per bidirectional flow | Spreadsheet analysis, loading into a flow/SIEM tool, comparing captures |
 
 On the sample capture the tool produces **3 Sigma rules** and a **13-object STIX bundle**. Sample outputs are committed in [`evidence/`](evidence/).
 
@@ -198,8 +211,21 @@ tags:
 </details>
 
 <p align="center">
-  <img src="docs/screenshots/02-triage-report-endpoints.png" alt="Triage report: encryption ratio and endpoint inventory" width="720"><br>
-  <sub>Second half of the HTML report: the 100% cleartext measurement and the endpoint inventory.</sub>
+  <img src="docs/screenshots/02-triage-report-exposure.png" alt="Triage report: the Exposure category with recovered credentials and the session-cookie audit" width="720"><br>
+  <sub>The report is a case file: the sidebar shows the capture's file name, packet count, duration, start time and SHA-256, and groups the evidence into Overview, Exposure, Transport, Network and Application. Each category opens on its own; long tables and the session flow graph show 15 rows and scroll for the rest.</sub>
+</p>
+
+### Network profile
+
+The Network category profiles the capture as a network rather than a list of leaks.
+
+<p align="center">
+  <img src="docs/screenshots/12-network-flow-profile.png" alt="Network profile and analyst observations" width="720"><br>
+  <sub>Profile and the observations the tool derives from the flow table.</sub>
+</p>
+<p align="center">
+  <img src="docs/screenshots/13-session-flow-graph.png" alt="Session flow graph" width="720"><br>
+  <sub>Session flow graph: every SYN, HTTP request and response between client and server (first 15 events; the box scrolls for the rest).</sub>
 </p>
 
 ---
@@ -331,8 +357,8 @@ sha256sum sample/traffic_capture.pcapng        # macOS: shasum -a 256
 
 ```bash
 python -m pytest -q
-# ..........                                                   [100%]
-# 10 passed
+# ......................                                       [100%]
+# 22 passed
 ```
 
 The suite runs against the bundled capture and checks the following:
@@ -344,6 +370,9 @@ The suite runs against the bundled capture and checks the following:
 - that the auth and TLS detectors run
 - that the Sigma and STIX exports are valid
 - the end-to-end CRITICAL rating
+- flow records (22 TCP flows, every frame accounted for, all handshakes complete), top talkers, protocol hierarchy, IO timeline and the NetFlow CSV export
+- conversations, the host inventory (server one hop away), TCP health, activity bursts, the session flow graph, and that the HTML report renders every section
+- that the session ID is detected as never rotated
 
 **GitHub Actions** ([`ci.yml`](.github/workflows/ci.yml)) installs the package, runs the tests and smoke-tests the CLI on every push and pull request, on **Python 3.9, 3.10, 3.11 and 3.12**.
 
@@ -359,7 +388,8 @@ network-forensics-toolkit/
 │   │   ├── pcap_http.py          # TCP reassembly + HTTP parsing
 │   │   ├── credentials.py        # plaintext form credentials
 │   │   ├── auth.py               # Basic-Auth, JWT, API keys
-│   │   ├── cookies.py            # session-cookie audit + token reuse
+│   │   ├── cookies.py            # session-cookie audit, token reuse, ID rotation
+│   │   ├── flows.py              # 5-tuple flows, top talkers, IO graph, profiling
 │   │   ├── tls.py                # ClientHello / SNI parsing
 │   │   └── traffic.py            # cleartext ratio + endpoint inventory
 │   ├── exporters/
@@ -372,6 +402,7 @@ network-forensics-toolkit/
 ├── report/                       # full project report (PDF + DOCX)
 ├── docs/screenshots/             # images used in this README
 ├── .github/workflows/ci.yml      # CI pipeline
+├── run.sh                        # one command: install, test, analyse, open report
 ├── pyproject.toml                # packaging; `pcap-triage` entry point
 └── requirements.txt
 ```

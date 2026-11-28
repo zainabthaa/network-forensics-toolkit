@@ -4,9 +4,11 @@ cli.py — command-line entry point for pcap_triage.
 
     pcap-triage <capture.pcapng> [-o report.html] [-j report.json]
                                  [--sigma rules.yml] [--stix bundle.json]
+                                 [--flows-csv flows.csv]
 
 Pipeline: load pcap -> reassemble TCP streams -> parse HTTP -> run detectors
--> aggregate findings -> render JSON + HTML and export Sigma + STIX.
+-> profile network flows -> aggregate findings -> render JSON + HTML and
+export Sigma + STIX + NetFlow-style CSV.
 """
 import argparse
 import datetime
@@ -15,7 +17,7 @@ import json
 import os
 import sys
 
-from .detectors import pcap_http, credentials, cookies, traffic, auth, tls
+from .detectors import pcap_http, credentials, cookies, traffic, auth, tls, flows
 from .exporters import sigma as sigma_export, stix as stix_export
 
 try:
@@ -34,7 +36,13 @@ def sha256_file(path):
     return h.hexdigest()
 
 
-def build_findings(creds, authf, cooky, enc):
+def _ts(t):
+    if not t:
+        return "—"
+    return datetime.datetime.fromtimestamp(t, datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
+def build_findings(creds, authf, cooky, enc, rot=None):
     f = []
     if creds:
         f.append({"severity": "CRITICAL", "category": "Credential Exposure",
@@ -61,6 +69,16 @@ def build_findings(creds, authf, cooky, enc):
             f.append({"severity": "HIGH", "category": "Session Token Exposure",
                       "title": f"Session cookie '{c['name']}' is exposed/replayable",
                       "detail": "; ".join(c["issues"])})
+    if rot and rot.get("fixation"):
+        f.append({"severity": "HIGH", "category": "Session Management",
+                  "title": "Session ID is not regenerated at login (session fixation)",
+                  "detail": f"The same session ID was kept across every login; {rot['distinct_session_ids']} distinct "
+                            "session ID(s) seen in the whole capture (OWASP A07, CWE-384)."})
+    if rot and rot.get("logout_not_invalidated"):
+        f.append({"severity": "MEDIUM", "category": "Session Management",
+                  "title": "Session ID survives logout",
+                  "detail": "After /logout the client kept presenting the pre-logout session ID; "
+                            "the token was not rotated or invalidated (CWE-613)."})
     order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4}
     f.sort(key=lambda x: order.get(x["severity"], 9))
     return f
@@ -81,6 +99,8 @@ def analyze(pcap_path):
     eps = traffic.endpoints(cap)
     authf = auth.detect(cap)
     tlsf = tls.detect(cap)
+    rot = cookies.session_rotation(cap)
+    prof = flows.profile(cap)
 
     # context for exporters
     clients, servers = set(), set()
@@ -93,7 +113,7 @@ def analyze(pcap_path):
     authf["_user_agent"] = ua
     hosts = [(ip, "client") for ip in sorted(clients)] + [(ip, "server") for ip in sorted(servers)]
 
-    findings = build_findings(creds, authf, cooky, enc)
+    findings = build_findings(creds, authf, cooky, enc, rot)
     report = {
         "meta": {
             "pcap_file": os.path.basename(pcap_path),
@@ -101,6 +121,9 @@ def analyze(pcap_path):
             "generated_utc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
             "packet_count": len(cap.packets),
             "http_transactions": len(cap.transactions),
+            "capture_start_utc": _ts(cap.first_time),
+            "capture_end_utc": _ts(cap.last_time),
+            "duration_s": prof["summary"]["duration_s"],
         },
         "risk_level": risk_level(findings),
         "findings": findings,
@@ -110,6 +133,8 @@ def analyze(pcap_path):
         "tls": tlsf,
         "encryption": enc,
         "endpoints": eps,
+        "session_rotation": rot,
+        "network": prof,
         "_hosts": hosts,
     }
     return report
@@ -128,6 +153,7 @@ def main(argv=None):
     ap.add_argument("-j", "--json", default="report.json", help="JSON report path")
     ap.add_argument("--sigma", default="sigma_rules.yml", help="Sigma rules output path")
     ap.add_argument("--stix", default="stix_bundle.json", help="STIX 2.1 bundle output path")
+    ap.add_argument("--flows-csv", default="flows.csv", help="NetFlow-style flow records (CSV) output path")
     args = ap.parse_args(argv)
 
     if not os.path.isfile(args.pcap):
@@ -150,6 +176,8 @@ def main(argv=None):
     with open(args.stix, "w") as f:
         json.dump(stix_export.build(report), f, indent=2)
     print(f"[+] STIX bundle  -> {args.stix}")
+    flows.write_netflow_csv(report["network"]["flows"], args.flows_csv)
+    print(f"[+] Flow records -> {args.flows_csv}")
 
     a = report["auth"]
     print(f"\n[=] Risk: {report['risk_level']} | "
@@ -158,6 +186,11 @@ def main(argv=None):
           f"{len(report['session_cookies'])} session cookie(s), "
           f"{report['encryption']['cleartext_pct']}% cleartext, "
           f"{report['tls']['encrypted_session_count']} TLS session(s)")
+    n = report["network"]["summary"]
+    print(f"[=] Network: {n['flow_count']} flow(s), {n['host_count']} host(s), "
+          f"{n['duration_s']}s, avg {n['avg_throughput_bps']/1000:.1f} kbit/s, "
+          f"peak {n['peak_throughput_bps']/1000:.1f} kbit/s, "
+          f"max {n['max_parallel_conns']} parallel connection(s)")
     return 0
 
 

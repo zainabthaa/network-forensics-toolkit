@@ -21,4 +21,4 @@ jobs:
       - name: Run tests
         run: pytest -q
       - name: Smoke-run the CLI on the sample capture
-        run: pcap-triage sample/traffic_capture.pcapng -o /tmp/report.html -j /tmp/report.json --sigma /tmp/rules.yml --stix /tmp/bundle.json
+        run: pcap-triage sample/traffic_capture.pcapng -o /tmp/report.html -j /tmp/report.json --sigma /tmp/rules.yml --stix /tmp/bundle.json --flows-csv /tmp/flows.csv
