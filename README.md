@@ -14,7 +14,7 @@ Web-application traffic was captured in an isolated lab and analysed as forensic
 
 **Zainab Taha** · **Natali Soukh**
 
-<img src="docs/screenshots/01-triage-report-overview.png" alt="pcap-triage HTML evidence report" width="820">
+<img src="docs/screenshots/01-report-overview.png" alt="pcap-triage HTML evidence report" width="820">
 
 <sub>The tool's HTML evidence report, generated automatically from the lab capture.</sub>
 
