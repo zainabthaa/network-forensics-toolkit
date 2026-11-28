@@ -3,11 +3,11 @@
 # 🔍 Network Forensics & Traffic Analysis Toolkit
 
 **Capture → investigate → automate.**
-Web-application traffic was captured in an isolated lab and analysed as forensic evidence. We then built a Python tool that turns any PCAP into an evidence report, Sigma detection rules and a STIX 2.1 threat-intel bundle.
+Web-application traffic was captured in an isolated lab and analysed as forensic evidence. We then built a Python tool that turns any PCAP into an evidence report, a network flow profile, Sigma detection rules and a STIX 2.1 threat-intel bundle.
 
 [![CI](https://github.com/zainabthaa/network-forensics-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/zainabthaa/network-forensics-toolkit/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue)
-![Tests](https://img.shields.io/badge/tests-10%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-22%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Wireshark](https://img.shields.io/badge/analysis-Wireshark%20%2F%20tshark-1679A7)
 ![Sigma](https://img.shields.io/badge/export-Sigma%20%7C%20STIX%202.1-purple)
@@ -16,7 +16,7 @@ Web-application traffic was captured in an isolated lab and analysed as forensic
 
 <img src="docs/screenshots/01-report-overview.png" alt="pcap-triage HTML evidence report" width="820">
 
-<sub>The tool's HTML evidence report, generated automatically from the lab capture.</sub>
+<sub>The tool's HTML evidence report, generated automatically from the lab capture and organised as a case file.</sub>
 
 </div>
 
@@ -59,7 +59,9 @@ The target web app (DVWA) runs entirely over **unencrypted HTTP**. A 4.4-minute 
 The project has two halves that support each other:
 
 1. **Manual investigation (Wireshark / tshark).** Build an isolated lab, capture a scripted browsing session against DVWA, then analyse it the way an incident responder would. That covers the TCP handshake, the HTTP structure, credential and token exposure, request replay and session hijacking. Every claim is tied to a frame number and a screenshot.
-2. **Automation (`pcap-triage`).** A pip-installable Python package that reproduces those findings on **any** capture, with no Wireshark needed. It reassembles TCP streams itself, runs a set of detectors, and writes evidence a SOC or SIEM can use directly.
+2. **Automation (`pcap-triage`).** A pip-installable Python package that reproduces those findings on **any** capture, with no Wireshark needed. It reassembles TCP streams itself, runs a set of detectors, profiles the capture as a network, and writes evidence a SOC or SIEM can use directly.
+
+The written report adds two senior extensions: a **network flow analysis** of the whole capture, and a **hardening and remediation design plan** that turns the findings into prioritised, standards-mapped controls with a before/after risk table.
 
 ```mermaid
 flowchart LR
@@ -72,11 +74,13 @@ flowchart LR
     E --> E3["Session-cookie audit<br/>+ token reuse"]
     E --> E4["TLS / SNI awareness"]
     E --> E5["Cleartext ratio<br/>+ endpoint inventory"]
-    E1 & E2 & E3 & E4 & E5 --> F["Findings + risk rating"]
+    B --> E6["Network profile<br/>flows · hosts · TCP health"]
+    E1 & E2 & E3 & E4 & E5 & E6 --> F["Findings + risk rating"]
     F --> G1["report.html"]
     F --> G2["report.json"]
     F --> G3["sigma_rules.yml"]
     F --> G4["stix_bundle.json"]
+    F --> G5["flows.csv"]
 ```
 
 ---
@@ -94,7 +98,6 @@ cd network-forensics-toolkit
 Outputs land in `out/`. To do the same steps by hand:
 
 ```bash
-
 python3 -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
@@ -141,7 +144,7 @@ Findings are ranked **CRITICAL → HIGH → MEDIUM**, and the highest one sets t
 
 | File | Format | Used for |
 |------|--------|----------|
-| `report.html` | Dark-themed, self-contained HTML | Human review, demos, attaching to a case file |
+| `report.html` | Light, self-contained HTML case file (sidebar categories, no external assets) | Human review, demos, attaching to a case file |
 | `report.json` | Machine-readable JSON | Scripting, diffing two captures, feeding other tools |
 | `sigma_rules.yml` | [Sigma](https://sigmahq.io) rules, tagged with MITRE ATT&CK (T1040, T1557, T1550.004) | Detecting the same exposure in proxy/Zeek logs in any SIEM |
 | `stix_bundle.json` | [STIX 2.1](https://oasis-open.github.io/cti-documentation/) bundle | Importing indicators (hosts, URLs, User-Agent) into a threat-intel platform |
@@ -232,7 +235,7 @@ The Network category profiles the capture as a network rather than a list of lea
 
 ## 🔬 Investigation walkthrough (with screenshots)
 
-The full write-up with 26 figures is in [`report/CS3093_Project_Report.pdf`](report/CS3093_Project_Report.pdf). These are the highlights.
+The full write-up with 28 figures, including the network flow analysis and the hardening and remediation plan, is in [`report/CS3093_Project_Report.pdf`](report/CS3093_Project_Report.pdf). These are the highlights.
 
 ### 1. Isolated lab and capture
 
@@ -415,12 +418,13 @@ network-forensics-toolkit/
 - Supports HTTP/1.x only. Bodies are framed by `Content-Length`, so chunked transfer encoding and HTTP/2 are not parsed yet.
 - TLS traffic is identified (version and SNI), not decrypted.
 - Credential detection covers URL-encoded forms, not JSON or multipart bodies.
+- Frame counts reflect the capture as recorded. If the capturing NIC used segmentation offload (as in the sample, with frames up to 33 KB), byte totals are right but per-frame counts are lower than on the wire.
 
 **Planned:**
 - [ ] Chunked-encoding and JSON-body support
 - [ ] Optional TLS decryption with an `SSLKEYLOGFILE`
 - [ ] Synthetic test PCAPs for the Basic-Auth / JWT / API-key detectors
-- [ ] Forensic timeline view in the HTML report
+- [x] Session timeline and flow graph in the HTML report
 
 ---
 
