@@ -71,7 +71,7 @@ flowchart LR
     D --> E{"Detectors"}
     E --> E1["Form credentials"]
     E --> E2["Basic-Auth · JWT · API keys"]
-    E --> E3["Session-cookie audit<br/>+ token reuse"]
+    E --> E3["Session-cookie audit<br/>+ token reuse + ID rotation"]
     E --> E4["TLS / SNI awareness"]
     E --> E5["Cleartext ratio<br/>+ endpoint inventory"]
     B --> E6["Network profile<br/>flows · hosts · TCP health"]
@@ -87,40 +87,59 @@ flowchart LR
 
 ## ⚡ Quick start
 
-**One command** (creates a virtualenv, installs, runs the tests, analyses the sample capture and opens the report):
+**Requirements:** Python 3.9+ and a Bash shell (macOS or Linux; on Windows use WSL). The only runtime dependencies are `scapy` and `jinja2`, which the script installs. Wireshark and tshark are **not** required.
 
 ```bash
 git clone https://github.com/zainabthaa/network-forensics-toolkit.git
 cd network-forensics-toolkit
-./run.sh                         # or: ./run.sh path/to/your.pcapng
+./run.sh                          # analyse the bundled sample capture
+./run.sh path/to/your.pcapng      # or analyse your own capture
 ```
 
-Outputs land in `out/`. To do the same steps by hand:
+`run.sh` does everything in one go:
 
-```bash
-python3 -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
-pip install -e ".[dev]"
+1. creates a virtual environment in `.venv/` (first run only),
+2. installs `pcap-triage` and the test dependencies,
+3. runs the test suite,
+4. analyses the capture and writes all five outputs to `out/`,
+5. opens `out/report.html` in your browser.
 
-pcap-triage sample/traffic_capture.pcapng
-open report.html                                        # Linux: xdg-open · Windows: start
-```
-
-**Requirements:** Python 3.9+. The only runtime dependencies are `scapy` and `jinja2`. Wireshark and tshark are **not** required to run the tool.
-
-Expected console output:
+Expected output:
 
 ```text
+[*] Creating virtual environment (.venv)
+[*] Installing pcap-triage and test dependencies
+[*] Running the test suite
+......................                                                   [100%]
+22 passed in 0.60s
+[*] Analysing sample/traffic_capture.pcapng
 [*] Loading capture: sample/traffic_capture.pcapng
 [*] 298 packets, 28 HTTP transactions
-[+] JSON report  -> report.json
-[+] HTML report  -> report.html
-[+] Sigma rules  -> sigma_rules.yml
-[+] STIX bundle  -> stix_bundle.json
-[+] Flow records -> flows.csv
+[+] JSON report  -> out/report.json
+[+] HTML report  -> out/report.html
+[+] Sigma rules  -> out/sigma_rules.yml
+[+] STIX bundle  -> out/stix_bundle.json
+[+] Flow records -> out/flows.csv
 
 [=] Risk: CRITICAL | 3 form-cred(s), 0 basic-auth, 0 JWT(s), 0 API key(s), 1 session cookie(s), 100.0% cleartext, 0 TLS session(s)
 [=] Network: 22 flow(s), 4 host(s), 266.107s, avg 10.6 kbit/s, peak 688.0 kbit/s, max 2 parallel connection(s)
+[*] Opening out/report.html
 ```
+
+<details>
+<summary><b>Running the steps by hand (or on Windows without WSL)</b></summary>
+
+```bash
+python3 -m venv .venv            # Windows: python -m venv .venv
+source .venv/bin/activate        # Windows (PowerShell): .venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+python -m pytest -q              # run the test suite
+mkdir out
+pcap-triage sample/traffic_capture.pcapng -o out/report.html -j out/report.json --sigma out/sigma_rules.yml --stix out/stix_bundle.json --flows-csv out/flows.csv
+```
+
+Without the output options, `pcap-triage` writes the five files to the current directory.
+</details>
 
 ---
 
@@ -188,7 +207,7 @@ On the sample capture the tool produces **3 Sigma rules** and a **13-object STIX
 </details>
 
 <details>
-<summary><b>Example: a generated Sigma rule</b></summary>
+<summary><b>Example: a generated Sigma rule (<code>id</code> and <code>date</code> lines omitted)</b></summary>
 
 ```yaml
 title: Session Cookie Set Without Secure Attribute
@@ -206,6 +225,8 @@ detection:
     filter:
         sc-set-cookie|contains: 'Secure'
     condition: selection and not filter
+falsepositives:
+    - Legitimate internal applications that have not yet migrated to HTTPS
 level: medium
 tags:
     - attack.credential_access
@@ -330,10 +351,11 @@ Each VM also has a separate NAT adapter, used **only** for installing packages. 
 2. **Assign static IPs** on the host-only interfaces, then confirm with `ping` in both directions.
 
    <img src="docs/screenshots/11-lab-connectivity.png" alt="Connectivity check" width="560">
-3. **Deploy DVWA** on the target:
+3. **Deploy DVWA** on the target. The upstream `compose.yml` publishes DVWA only on `127.0.0.1:4280`, so change its `ports` line to `- 80:80` first, which makes it reachable from Kali on port 80:
    ```bash
    git clone https://github.com/digininja/DVWA.git && cd DVWA
-   docker compose up -d          # publishes DVWA on 0.0.0.0:80
+   sed -i 's/127.0.0.1:4280:80/80:80/' compose.yml
+   docker compose up -d          # DVWA now listens on 0.0.0.0:80
    ```
 4. From Kali, open `http://192.168.128.20/login.php`, log in with `admin` / `password`, initialise the database, and set **Security → Low**.
 5. **Start Wireshark on the lab interface first**, then browse: log in, visit 5+ pages, submit the guestbook (stored XSS), open reflected XSS, log out, and make one failed login. Keep going for 3–5 minutes.
@@ -358,26 +380,28 @@ sha256sum sample/traffic_capture.pcapng        # macOS: shasum -a 256
 
 ## ✅ Testing & CI
 
-```bash
-python -m pytest -q
-# ......................                                       [100%]
-# 22 passed
+`./run.sh` runs the full test suite before every analysis, and stops if any test fails:
+
+```text
+[*] Running the test suite
+......................                                                   [100%]
+22 passed in 0.60s
 ```
 
-The suite runs against the bundled capture and checks the following:
+The 22 tests run against the bundled capture and check:
 - the packet and HTTP-transaction counts (298 / 28)
 - that `admin` / `password` is recovered
 - that `PHPSESSID` is flagged insecure and reused
-- the 100% cleartext ratio
-- the endpoint inventory
+- that the session ID is detected as never rotated
+- the 100% cleartext ratio and the endpoint inventory
 - that the auth and TLS detectors run
 - that the Sigma and STIX exports are valid
 - the end-to-end CRITICAL rating
-- flow records (22 TCP flows, every frame accounted for, all handshakes complete), top talkers, protocol hierarchy, IO timeline and the NetFlow CSV export
-- conversations, the host inventory (server one hop away), TCP health, activity bursts, the session flow graph, and that the HTML report renders every section
-- that the session ID is detected as never rotated
+- the flow records (22 TCP flows, every TCP frame accounted for, all handshakes complete), top talkers, protocol hierarchy, IO timeline and the NetFlow-style CSV export
+- the conversations, the host inventory (server one routed hop away), TCP health, activity bursts and the session flow graph
+- that the HTML report renders every section
 
-**GitHub Actions** ([`ci.yml`](.github/workflows/ci.yml)) installs the package, runs the tests and smoke-tests the CLI on every push and pull request, on **Python 3.9, 3.10, 3.11 and 3.12**.
+**GitHub Actions** ([`ci.yml`](.github/workflows/ci.yml)) installs the package, runs the same tests and smoke-tests the CLI on every push and pull request, on **Python 3.9, 3.10, 3.11 and 3.12**.
 
 ---
 
@@ -420,7 +444,7 @@ network-forensics-toolkit/
 - Credential detection covers URL-encoded forms, not JSON or multipart bodies.
 - Frame counts reflect the capture as recorded. If the capturing NIC used segmentation offload (as in the sample, with frames up to 33 KB), byte totals are right but per-frame counts are lower than on the wire.
 
-**Planned:**
+**Roadmap:**
 - [ ] Chunked-encoding and JSON-body support
 - [ ] Optional TLS decryption with an `SSLKEYLOGFILE`
 - [ ] Synthetic test PCAPs for the Basic-Auth / JWT / API-key detectors

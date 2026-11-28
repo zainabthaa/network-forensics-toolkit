@@ -17,7 +17,8 @@ fi
 source .venv/bin/activate
 echo "[*] Installing pcap-triage and test dependencies"
 pip install -q --upgrade pip >/dev/null
-pip install -q -e ".[dev]"
+pip install -q --force-reinstall --no-deps . >/dev/null
+pip install -q ".[dev]"
 
 echo "[*] Running the test suite"
 python -m pytest -q
